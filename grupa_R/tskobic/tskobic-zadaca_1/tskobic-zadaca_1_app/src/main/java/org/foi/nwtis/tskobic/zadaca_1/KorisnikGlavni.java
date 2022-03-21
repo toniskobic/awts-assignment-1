@@ -8,13 +8,14 @@ import java.net.SocketException;
 import java.nio.charset.Charset;
 
 public class KorisnikGlavni {
-	String komanda_1 = "TEMP LDZA";
+	String komanda_1 = "METEO PERO";
 	String adresa = "localhost";
 	int port = 8000;
 
 	public static void main(String[] args) {
 		KorisnikGlavni kg = new KorisnikGlavni();
-		kg.posaljiKomandu(kg.adresa, kg.port, kg.komanda_1);
+		String odgovor = kg.posaljiKomandu(kg.adresa, kg.port, kg.komanda_1);
+		kg.ispis(odgovor);
 	}
 
 	public String posaljiKomandu(String adresa, int port, String komanda) {

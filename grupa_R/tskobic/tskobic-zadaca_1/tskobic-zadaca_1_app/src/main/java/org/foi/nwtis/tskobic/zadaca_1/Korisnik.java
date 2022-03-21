@@ -10,7 +10,7 @@ import lombok.AllArgsConstructor;
  * Klasa za korisnika
  *
  */
-@AllArgsConstructor()
+//@AllArgsConstructor()
 public class Korisnik {
     @Getter
     @Setter 
@@ -28,4 +28,14 @@ public class Korisnik {
     @Setter 
     @NonNull 
     private String lozinka;
+    
+	public Korisnik(@NonNull String prezime, @NonNull String ime, @NonNull String korisnickoIme,
+			@NonNull String lozinka) {
+		super();
+		this.prezime = prezime;
+		this.ime = ime;
+		this.korisnickoIme = korisnickoIme;
+		this.lozinka = lozinka;
+	}
+    
 }
