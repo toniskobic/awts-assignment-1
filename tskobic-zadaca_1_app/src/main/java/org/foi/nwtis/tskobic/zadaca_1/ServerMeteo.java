@@ -10,13 +10,18 @@ import java.nio.charset.Charset;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.Konfiguracija;
+import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.KonfiguracijaApstraktna;
+import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.NeispravnaKonfiguracija;
+
 public class ServerMeteo {
 	int port;
 	int maksCekaca;
 	Socket veza = null;
+	static public Konfiguracija konfig = null;
 
 	public static void main(String[] args) {
-		// TODO UÄŤitaj postavke u datoteke konfiguracije
+		// TODO Učitaj postavke u datoteke konfiguracije
 		
 		int port = 8000;
 		int maksCekaca = 10;
