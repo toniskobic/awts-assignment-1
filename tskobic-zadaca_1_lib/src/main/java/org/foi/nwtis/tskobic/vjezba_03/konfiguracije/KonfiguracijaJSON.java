@@ -26,7 +26,7 @@ public class KonfiguracijaJSON extends KonfiguracijaApstraktna {
 			throw new NeispravnaKonfiguracija("Datoteka: " + nazivDatoteke + " nema tip: " + TIP);
 		} else if (! datoteka.isFile() || ! datoteka.exists() || ! datoteka.canRead()) {
 			throw new NeispravnaKonfiguracija("Datoteka: " + nazivDatoteke + 
-					" nije ispravnog tipa/ne postoji/ne moće se čitati");
+					" nije ispravnog tipa/ne postoji/ne može se čitati");
 		}
 		try (BufferedReader br = new BufferedReader(new FileReader(datoteka))) {
 			Gson gson = new Gson();

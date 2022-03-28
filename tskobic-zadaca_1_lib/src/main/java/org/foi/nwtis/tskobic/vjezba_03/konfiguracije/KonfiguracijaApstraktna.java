@@ -2,9 +2,10 @@ package org.foi.nwtis.tskobic.vjezba_03.konfiguracije;
 
 import java.util.Properties;
 
+// TODO: Auto-generated Javadoc
 /**
  * Apstraktna klasa za rad s postavkama iz konfiguracijske datoteke Implementira
- * dio metoda iz sučelja Konfiguracija.
+ * dio mentoda iz sučelja Konfiguracija.
  */
 public abstract class KonfiguracijaApstraktna implements Konfiguracija {
 
@@ -137,8 +138,8 @@ public abstract class KonfiguracijaApstraktna implements Konfiguracija {
 	/**
 	 * Daj postavku.
 	 *
-	 * @param kljuc ljuč postave
-	 * @return vrijednost postavke
+	 * @param kljuc ključ postave
+	 * @return vrijenost postavke
 	 */
 	@Override
 	public String dajPostavku(String kljuc) {		
@@ -162,7 +163,7 @@ public abstract class KonfiguracijaApstraktna implements Konfiguracija {
 	}
 
 	/**
-	 * AĹľuriraj postavku.
+	 * Ažuriraj postavku.
 	 *
 	 * @param kljuc ključ posstavke
 	 * @param vrijednost vrijednost postavke
@@ -204,3 +205,4 @@ public abstract class KonfiguracijaApstraktna implements Konfiguracija {
 	}
 
 }
+

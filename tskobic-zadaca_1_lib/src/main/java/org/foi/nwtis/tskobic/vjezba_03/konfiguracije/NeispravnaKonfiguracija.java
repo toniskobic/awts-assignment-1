@@ -1,7 +1,7 @@
 package org.foi.nwtis.tskobic.vjezba_03.konfiguracije;
 
 /*
- * Iznimka za slučaj kada je neispravna konfiguracija s postavkama
+ * Iznimka za slučaj kada je neispravna konfiguracija s postavmaka
  */
 public class NeispravnaKonfiguracija extends Exception {
 

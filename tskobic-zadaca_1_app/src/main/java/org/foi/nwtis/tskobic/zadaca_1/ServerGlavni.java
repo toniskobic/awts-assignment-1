@@ -52,7 +52,7 @@ public class ServerGlavni {
 		ServerGlavni sm = new ServerGlavni(port, maksCekaca);
 		sm.pripremiKorisnici(nazivDatotekeKorisnika);
 		System.out.println("Broj podataka: " + sm.korisnici.size());
-//		sm.obradaZahtjeva();
+		sm.obradaZahtjeva();
 
 	}
 
@@ -94,42 +94,11 @@ public class ServerGlavni {
 
 		try (ServerSocket ss = new ServerSocket(this.port, this.maksCekaca)) {
 			while (true) {
-				System.out.println("ÄŚekam korisnika."); // TODO kasnije obrisati
+				System.out.println("Čekam korisnika."); // TODO kasnije obrisati
 				this.veza = ss.accept();
-
-				try (InputStreamReader isr = new InputStreamReader(this.veza.getInputStream(),
-						Charset.forName("UTF-8"));
-						OutputStreamWriter osw = new OutputStreamWriter(this.veza.getOutputStream(),
-								Charset.forName("UTF-8"));) {
-
-					StringBuilder tekst = new StringBuilder();
-					while (true) {
-						int i = isr.read();
-						if (i == -1) {
-							break;
-						}
-						tekst.append((char) i);
-					}
-					System.out.println(tekst.toString()); // TODO kasnije obrisati
-					this.veza.shutdownInput();
-
-					// TODO prepoznati komande
-					Pattern pMeteoIcao = Pattern.compile(meteoIcao);
-					Pattern pMeteoIcaoDatum = Pattern.compile(meteoIcaoDatum);
-					Matcher mMeteoIcao = pMeteoIcao.matcher(tekst.toString());
-					Matcher mMeteoIcaoDatum = pMeteoIcaoDatum.matcher(tekst.toString());
-
-					if (mMeteoIcao.matches()) {
-						izvrsiMeteoIcao(osw, tekst.toString());
-					} else if (mMeteoIcaoDatum.matches()) {
-						// TODO metoda za icao i datum
-					} else {
-						krivaKomanda(osw, "ERROR 10 Sintaksa komande nije uredu.");
-					}
-
-				} catch (SocketException e) {
-					e.printStackTrace();
-				}
+				
+				DretvaZahtjeva dretvaZahtjeva = new DretvaZahtjeva(this, konfig, veza);
+				dretvaZahtjeva.start();
 			}
 
 		} catch (IOException ex) {
@@ -138,36 +107,4 @@ public class ServerGlavni {
 
 	}
 
-	private void izvrsiMeteoIcao(OutputStreamWriter osw, String komanda) {
-		String p[] = komanda.split(" ");
-		String icao = p[1];
-		String odgovor = null;
-
-//		for (AerodromMeteo am : this.aerodromiMeteo) {
-//			// TODO pronaÄ‘i zadnji/najsveĹľiji podatak
-//			if (am.icao.compareTo(icao) == 0) {
-//				odgovor = "OK " + am.temp + " " + am.vlaga + " " + am.tlak + " " + am.vrijeme + ";";
-//				try {
-//					osw.write(odgovor);
-//					osw.flush();
-//					osw.close();
-//				} catch (IOException e) {
-//					e.printStackTrace();
-//				}
-//				return;
-//			}
-//		}
-//		krivaKomanda(osw, "ERROR 11 Aerodrom '" + icao + "' ne postoji.");
-
-	}
-
-	private void krivaKomanda(OutputStreamWriter osw, String odgovor) {
-		try {
-			osw.write(odgovor);
-			osw.flush();
-			osw.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 }

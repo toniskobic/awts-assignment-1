@@ -24,7 +24,7 @@ public class KonfiguracijaBIN extends KonfiguracijaApstraktna {
 			throw new NeispravnaKonfiguracija("Datoteka: " + nazivDatoteke + " nema tip: " + TIP);
 		} else if (! datoteka.isFile() || ! datoteka.exists() || ! datoteka.canRead()) {
 			throw new NeispravnaKonfiguracija("Datoteka: " + nazivDatoteke + 
-					" nije ispravnog tipa/ne postoji/ne moće se čitati");
+					" nije ispravnog tipa/ne postoji/ne može se čitati");
 		}
 		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(datoteka))) {
 			Object o = ois.readObject();

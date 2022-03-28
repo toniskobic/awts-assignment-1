@@ -21,7 +21,7 @@ public class KonfiguracijaXML extends KonfiguracijaApstraktna {
 			throw new NeispravnaKonfiguracija("Datoteka: " + nazivDatoteke + " nema tip: " + TIP);
 		} else if (! datoteka.isFile() || ! datoteka.exists() || ! datoteka.canRead()) {
 			throw new NeispravnaKonfiguracija("Datoteka: " + nazivDatoteke + 
-					" nije ispravnog tipa/ne postoji/ne moĹľe se ÄŤitati");
+					" nije ispravnog tipa/ne postoji/ne može se čitati");
 		}
 		try {
 			this.postavke.loadFromXML(new FileInputStream(datoteka));
@@ -38,7 +38,7 @@ public class KonfiguracijaXML extends KonfiguracijaApstraktna {
 			throw new NeispravnaKonfiguracija("Datoteka: " + nazivDatoteke + " nema tip: " + TIP);
 		} else if (datoteka.exists() && ! datoteka.canWrite()) {
 			throw new NeispravnaKonfiguracija("Datoteka: " + nazivDatoteke + 
-					" nije ispravnog tipa/ne postoji/ne moĹľe se pisati u datoteku");
+					" nije ispravnog tipa/ne postoji/ne može se pisati u datoteku");
 		}
 		try {
 			this.postavke.storeToXML(new FileOutputStream(datoteka), "NWTiS 2022.");
