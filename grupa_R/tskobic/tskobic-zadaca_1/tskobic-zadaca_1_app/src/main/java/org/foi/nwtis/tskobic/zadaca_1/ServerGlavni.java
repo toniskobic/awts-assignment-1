@@ -22,41 +22,73 @@ import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.Konfiguracija;
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.KonfiguracijaApstraktna;
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.NeispravnaKonfiguracija;
 
+/**
+ * Glavna klasa poslužitelja ServerGlavni.
+ */
 public class ServerGlavni {
+	
+	/** broj porta. */
 	int port;
+	
+	/** maksimalni broj čekača. */
 	int maksCekaca;
+	
+	/** veza. */
 	Socket veza = null;
+	
+	/** kolekcija korisnika. */
 	List<Korisnik> korisnici = new ArrayList<>();
+	
+	/** komanda meteo icao. */
 	String meteoIcao = "^METEO ([A-Z]{4})$";
+	
+	/** komanda meteo icao datum. */
 	String meteoIcaoDatum = "^METEO ([A-Z]{4}) (\\d{4}-\\d{2}-\\d{2})$";
 
-	static public Konfiguracija konfig = null;
+	/** konfiguracijski podaci. */
+	public Konfiguracija konfig = null;
+	
+	/** iso format za datum. */
 	static SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
+	/**
+	 * Glavna metoda.
+	 *
+	 * @param args argumenti
+	 */
 	public static void main(String[] args) {
 		if (args.length != 1) {
 			System.out.println("Broj argumenata nije 1.");
 			return;
 		}
-		ucitavanjePodataka(args[0]);
+		ServerGlavni sg = new ServerGlavni(0, 0);
+		
+		sg.ucitavanjePodataka(args[0]);
 
-		if (konfig == null) {
+		if (sg.konfig == null) {
 			System.out.println("Problem s konfiguracijom.");
 			return;
 		}
 
-		int port = Integer.parseInt(konfig.dajPostavku("port"));
-		int maksCekaca = Integer.parseInt(konfig.dajPostavku("maks.cekaca"));
-		String nazivDatotekeKorisnika = konfig.dajPostavku("datoteka.korisnika");
-
-		ServerGlavni sm = new ServerGlavni(port, maksCekaca);
-		sm.pripremiKorisnici(nazivDatotekeKorisnika);
-		System.out.println("Broj podataka: " + sm.korisnici.size());
-		sm.obradaZahtjeva();
+		int port = Integer.parseInt(sg.konfig.dajPostavku("port"));
+		int maksCekaca = Integer.parseInt(sg.konfig.dajPostavku("maks.cekaca"));
+		String nazivDatotekeKorisnika = sg.konfig.dajPostavku("datoteka.korisnika");
+		
+		sg.port = port;
+		sg.maksCekaca = maksCekaca;
+		
+		sg.pripremiKorisnici(nazivDatotekeKorisnika);
+		System.out.println("Broj podataka: " + sg.korisnici.size());
+		sg.obradaZahtjeva();
 
 	}
 
-	private void pripremiKorisnici(String nazivDatotekeKorisnika) {
+	/**
+	 * Priprema (učitavanje) korisnika.
+	 *
+	 * @param nazivDatotekeKorisnika naziv datoteke korisnika
+	 */
+	public void pripremiKorisnici(String nazivDatotekeKorisnika) {
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(nazivDatotekeKorisnika, Charset.forName("UTF-8")));
 			while (true) {
@@ -76,20 +108,34 @@ public class ServerGlavni {
 
 	}
 
-	private static void ucitavanjePodataka(String nazivDatoteke) {
+	/**
+	 * Učitavanje konfiguracijskih podataka.
+	 *
+	 * @param nazivDatoteke naziv datoteke konfiguracijskih podataka
+	 */
+	public void ucitavanjePodataka(String nazivDatoteke) {
 		try {
-			konfig = KonfiguracijaApstraktna.preuzmiKonfiguraciju(nazivDatoteke);
+			this.konfig = KonfiguracijaApstraktna.preuzmiKonfiguraciju(nazivDatoteke);
 		} catch (NeispravnaKonfiguracija e) {
 			e.printStackTrace();
 		}
 	}
 
+	/**
+	 * Konstruktor klase.
+	 *
+	 * @param port broj porta
+	 * @param maksCekaca maksimalan broj čekača
+	 */
 	public ServerGlavni(int port, int maksCekaca) {
 		super();
 		this.port = port;
 		this.maksCekaca = maksCekaca;
 	}
 
+	/**
+	 * Obrada zahtjeva.
+	 */
 	public void obradaZahtjeva() {
 
 		try (ServerSocket ss = new ServerSocket(this.port, this.maksCekaca)) {
