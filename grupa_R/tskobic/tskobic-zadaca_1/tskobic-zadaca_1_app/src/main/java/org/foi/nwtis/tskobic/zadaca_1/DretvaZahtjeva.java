@@ -1,5 +1,6 @@
 package org.foi.nwtis.tskobic.zadaca_1;
 
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
@@ -11,6 +12,7 @@ import java.util.regex.Pattern;
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.Konfiguracija;
 
 public class DretvaZahtjeva extends Thread {
+	ServerGlavni serverGlavni = null;
 	Konfiguracija konfig = null;
 	Socket veza = null;
 	String meteoIcao = "^METEO ([A-Z]{4})$";
@@ -18,8 +20,9 @@ public class DretvaZahtjeva extends Thread {
 
 	
 	// TODO pogledati za naziv dretve
-	public DretvaZahtjeva(Konfiguracija konfig, Socket veza) {
+	public DretvaZahtjeva(ServerGlavni serverGlavni, Konfiguracija konfig, Socket veza) {
 		super();
+		this.serverGlavni = serverGlavni;
 		this.konfig = konfig;
 		this.veza = veza;
 	}
@@ -67,14 +70,28 @@ public class DretvaZahtjeva extends Thread {
 
 	}
 
-	private void krivaKomanda(OutputStreamWriter osw, String string) {
-		// TODO Auto-generated method stub
-		
+	private void izvrsiMeteoIcao(OutputStreamWriter osw, String komanda) {
+		String p[] = komanda.split(" ");
+		String icao = p[1];
+		String adresaMeteoServer = this.konfig.dajPostavku("server.meteo.adresa");
+		int portMeteoServer = Integer.parseInt(this.konfig.dajPostavku("server.meteo.port"));
+		String odgovor = this.posaljiKomandu(adresaMeteoServer, portMeteoServer, komanda);
+		try {
+			osw.write(odgovor);
+			osw.flush();
+		} catch (IOException e) {		
+			e.printStackTrace();
+		}
 	}
 
-	private void izvrsiMeteoIcao(OutputStreamWriter osw, String string) {
-		// TODO Auto-generated method stub
-		
+	private void krivaKomanda(OutputStreamWriter osw, String odgovor) {
+		try {
+			osw.write(odgovor);
+			osw.flush();
+			osw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -83,4 +100,36 @@ public class DretvaZahtjeva extends Thread {
 		super.interrupt();
 	}
 
+	public String posaljiKomandu(String adresa, int port, String komanda) {
+		try (Socket veza = new Socket(adresa, port);
+				InputStreamReader isr = new InputStreamReader(veza.getInputStream(), Charset.forName("UTF-8"));
+				OutputStreamWriter osw = new OutputStreamWriter(veza.getOutputStream(), Charset.forName("UTF-8"));) {
+
+			osw.write(komanda);
+			osw.flush();
+			veza.shutdownOutput();
+			StringBuilder tekst = new StringBuilder();
+			while (true) {
+				int i = isr.read();
+				if (i == -1) {
+					break;
+				}
+				tekst.append((char) i);
+			}
+			veza.shutdownInput();
+			veza.close();
+			return tekst.toString();
+		} catch (SocketException e) {
+			ispis(e.getMessage());
+		} catch (IOException ex) {
+			ispis(ex.getMessage());
+		}
+		return null;
+	}
+
+	private void ispis(String message) {
+		System.out.println(message);
+		
+	}
+	
 }

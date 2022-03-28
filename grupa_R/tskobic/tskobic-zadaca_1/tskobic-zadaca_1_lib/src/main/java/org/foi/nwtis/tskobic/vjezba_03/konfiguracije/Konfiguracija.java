@@ -119,3 +119,4 @@ public interface Konfiguracija {
 		return tip;
 	}
 }
+
