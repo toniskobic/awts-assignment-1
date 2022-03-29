@@ -8,9 +8,9 @@ import java.net.SocketException;
 import java.nio.charset.Charset;
 
 public class KorisnikGlavni {
-	String komanda_1 = "METEO LDZA";
+	String komanda_1 = "METEO LDZA 2021-01-07";
 	String adresa = "localhost";
-	int port = 8003;
+	int port = 8000;
 
 	public static void main(String[] args) {
 		KorisnikGlavni kg = new KorisnikGlavni();
