@@ -38,12 +38,6 @@ public class ServerGlavni {
 	
 	/** kolekcija korisnika. */
 	List<Korisnik> korisnici = new ArrayList<>();
-	
-	/** komanda meteo icao. */
-	String meteoIcao = "^METEO ([A-Z]{4})$";
-	
-	/** komanda meteo icao datum. */
-	String meteoIcaoDatum = "^METEO ([A-Z]{4}) (\\d{4}-\\d{2}-\\d{2})$";
 
 	/** konfiguracijski podaci. */
 	public Konfiguracija konfig = null;
