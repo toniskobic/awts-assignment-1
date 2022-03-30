@@ -9,13 +9,18 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.Charset;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.NoSuchElementException;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -34,8 +39,8 @@ public class ServerMeteo {
 
 	String meteoIcao = "^METEO ([A-Z]{4})$";
 	String meteoIcaoDatum = "^METEO ([A-Z]{4}) (\\d{4}-\\d{2}-\\d{2})$";
-	String meteoTemp = "^TEMP (\\d{1},\\d{1}) (\\d{1},\\d{1})$";
-	String meteoTempDatum = "^TEMP (\\d{1},\\d{1}) (\\d{1},\\d{1}) (\\d{4}-\\d{2}-\\d{2})$";
+	String meteoTemp = "^TEMP (-?\\d{1,3},\\d{1}) (-?\\d{1,3},\\d{1})$";
+	String meteoTempDatum = "^TEMP (-?\\d{1,3},\\d{1}) (-?\\d{1,3},\\d{1}) (\\d{4}-\\d{2}-\\d{2})$";
 
 	static public Konfiguracija konfig = null;
 	static SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -84,7 +89,6 @@ public class ServerMeteo {
 
 		try (ServerSocket ss = new ServerSocket(this.port, this.maksCekaca)) {
 			while (true) {
-				System.out.println("Čekam korisnika."); // TODO kasnije obrisati
 				this.veza = ss.accept();
 
 				try (InputStreamReader isr = new InputStreamReader(this.veza.getInputStream(),
@@ -100,20 +104,18 @@ public class ServerMeteo {
 						}
 						tekst.append((char) i);
 					}
-					System.out.println(tekst.toString()); // TODO kasnije obrisati
 					this.veza.shutdownInput();
 
-					// TODO prepoznati komande
 					if (provjeraSintakseObrada(tekst.toString(), meteoIcao)) {
 						izvrsiMeteoIcao(osw, tekst.toString());
 					} else if (provjeraSintakseObrada(tekst.toString(), meteoIcaoDatum)) {
 						izvrsiMeteoIcaoDatum(osw, tekst.toString());
 					} else if (provjeraSintakseObrada(tekst.toString(), meteoTemp)) {
-						// TODO metoda za temp
+						izvrsiMeteoTemp(osw, tekst.toString());
 					} else if (provjeraSintakseObrada(tekst.toString(), meteoTempDatum)) {
-						// TODO metoda za temp i datum
+						izvrsiMeteoTempDatum(osw, tekst.toString());
 					} else {
-						krivaKomanda(osw, "ERROR 10 Sintaksa komande nije uredu.");
+						ispisGreske(osw, "ERROR 10 Sintaksa komande nije uredu.");
 					}
 
 				} catch (SocketException e) {
@@ -144,7 +146,7 @@ public class ServerMeteo {
 		List<AerodromMeteo> fAerodromiMeteo = aerodromiMeteo.stream().filter(c -> c.getIcao().equals(icao))
 				.collect(Collectors.toList());
 		if (fAerodromiMeteo.isEmpty()) {
-			krivaKomanda(osw, "ERROR 11 Aerodrom '" + icao + "' ne postoji.");
+			ispisGreske(osw, "ERROR 11 Aerodrom '" + icao + "' ne postoji.");
 		} else {
 			AerodromMeteo am = fAerodromiMeteo.stream().max(Comparator.comparing(AerodromMeteo::getTime))
 					.orElseThrow(NoSuchElementException::new);
@@ -168,7 +170,7 @@ public class ServerMeteo {
 		List<AerodromMeteo> fAerodromiMeteo = aerodromiMeteo.stream().filter(c -> c.getIcao().equals(icao))
 				.collect(Collectors.toList());
 		if (fAerodromiMeteo.isEmpty()) {
-			krivaKomanda(osw, "ERROR 11 Aerodrom '" + icao + "' ne postoji.");
+			ispisGreske(osw, "ERROR 11 Aerodrom '" + icao + "' ne postoji.");
 		} else {
 			try {
 				long uneseniDatum = isoFormat.parse(datum).getTime();
@@ -193,7 +195,90 @@ public class ServerMeteo {
 		}
 	}
 
-	private void krivaKomanda(OutputStreamWriter osw, String odgovor) {
+	private void izvrsiMeteoTemp(OutputStreamWriter osw, String komanda) {
+		String p[] = komanda.split(" ");
+		String odgovor = "";
+
+		try {
+			double temp1 = izvrsiDoublePretvorbu(p[1]);
+			double temp2 = izvrsiDoublePretvorbu(p[2]);
+			Predicate<AerodromMeteo> izraz = c -> c.getTemp() >= temp1 && c.getTemp() <= temp2;
+
+			if (temp1 > temp2) {
+				izraz = c -> c.getTemp() >= temp2 && c.getTemp() <= temp1;
+			}
+
+			List<AerodromMeteo> fAerodromiMeteo = aerodromiMeteo.stream().filter(izraz).collect(Collectors.toList());
+			if (fAerodromiMeteo.isEmpty()) {
+				ispisGreske(osw,
+						"ERROR 11 Meteo podaci s temperaturom u rasponu " + temp1 + " i " + temp2 + " ne postoje.");
+			} else {
+				for (AerodromMeteo am : fAerodromiMeteo) {
+					odgovor = odgovor + "OK " + am.icao + " " + (double) Math.round(am.temp * 10) / 10 + " " + am.vlaga
+							+ " " + am.tlak + " " + am.vrijeme + "; ";
+				}
+
+				try {
+					osw.write(odgovor);
+					osw.flush();
+					osw.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void izvrsiMeteoTempDatum(OutputStreamWriter osw, String komanda) {
+		String p[] = komanda.split(" ");
+		String datum = p[3] + " 00:00:00.00";
+		String odgovor = "";
+
+		try {
+			double temp1 = izvrsiDoublePretvorbu(p[1]);
+			double temp2 = izvrsiDoublePretvorbu(p[2]);
+			long uneseniDatum = isoFormat.parse(datum).getTime();
+
+			Predicate<AerodromMeteo> izraz = c -> (c.getTemp() >= temp1 && c.getTemp() <= temp2)
+					&& (c.getTime() > uneseniDatum && c.getTime() < uneseniDatum + 86400000);
+
+			if (temp1 > temp2) {
+				izraz = c -> (c.getTemp() >= temp2 && c.getTemp() <= temp1)
+						&& (c.getTime() > uneseniDatum && c.getTime() < uneseniDatum + 86400000);
+			}
+
+			List<AerodromMeteo> fAerodromiMeteo = aerodromiMeteo.stream().filter(izraz).collect(Collectors.toList());
+			if (fAerodromiMeteo.isEmpty()) {
+				ispisGreske(osw, "ERROR 11 Meteo podaci s temperaturom u rasponu " + temp1 + " i " + temp2 + " na datum"
+						+ datum + "ne postoje.");
+			} else {
+				for (AerodromMeteo am : fAerodromiMeteo) {
+					odgovor = odgovor + "OK " + am.icao + " " + (double) Math.round(am.temp * 10) / 10 + " " + am.vlaga
+							+ " " + am.tlak + " " + am.vrijeme + "; ";
+				}
+
+				try {
+					osw.write(odgovor);
+					osw.flush();
+					osw.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private double izvrsiDoublePretvorbu(String unos) throws ParseException {
+		NumberFormat format = NumberFormat.getInstance(Locale.FRANCE);
+		double broj = format.parse(unos).doubleValue();
+		return broj;
+	}
+
+	private void ispisGreske(OutputStreamWriter osw, String odgovor) {
 		try {
 			osw.write(odgovor);
 			osw.flush();
@@ -223,6 +308,5 @@ public class ServerMeteo {
 		sm.pripremiMeteo(nazivDatotekeMeteoPodataka);
 		System.out.println("Broj podataka: " + sm.aerodromiMeteo.size());
 		sm.obradaZahtjeva();
-
 	}
 }

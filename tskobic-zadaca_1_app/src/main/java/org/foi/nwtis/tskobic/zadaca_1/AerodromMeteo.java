@@ -9,7 +9,7 @@ import lombok.Setter;
 /**
  * Klasa za meteo zapis aerodroma
  */
-//@AllArgsConstructor()
+@AllArgsConstructor()
 public class AerodromMeteo implements Serializable {
 	private static final long serialVersionUID = 1L;
 	@Getter
@@ -32,15 +32,4 @@ public class AerodromMeteo implements Serializable {
 	@Getter
 	@Setter
 	long time;
-	
-	public AerodromMeteo(@NonNull String icao, double temp, double tlak, double vlaga, @NonNull String vrijeme,
-			long time) {
-		super();
-		this.icao = icao;
-		this.temp = temp;
-		this.tlak = tlak;
-		this.vlaga = vlaga;
-		this.vrijeme = vrijeme;
-		this.time = time;
-	}
 }
