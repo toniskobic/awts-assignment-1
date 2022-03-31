@@ -26,55 +26,48 @@ import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.NeispravnaKonfiguracija;
  * Glavna klasa poslužitelja ServerGlavni.
  */
 public class ServerGlavni {
-	
+
 	/** broj porta. */
 	int port;
-	
+
 	/** maksimalni broj čekača. */
 	int maksCekaca;
-	
+
 	/** veza. */
 	Socket veza = null;
-	
+
 	/** kolekcija korisnika. */
 	List<Korisnik> korisnici = new ArrayList<>();
 
 	/** konfiguracijski podaci. */
 	public Konfiguracija konfig = null;
-	
+
 	/** iso format za datum. */
 	static SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
 	/**
-	 * Glavna metoda.
+	 * Konstruktor klase.
 	 *
-	 * @param args argumenti
+	 * @param port       broj porta
+	 * @param maksCekaca maksimalan broj čekača
 	 */
-	public static void main(String[] args) {
-		if (args.length != 1) {
-			System.out.println("Broj argumenata nije 1.");
-			return;
+	public ServerGlavni(int port, int maksCekaca) {
+		super();
+		this.port = port;
+		this.maksCekaca = maksCekaca;
+	}
+
+	/**
+	 * Učitavanje konfiguracijskih podataka.
+	 *
+	 * @param nazivDatoteke naziv datoteke konfiguracijskih podataka
+	 */
+	public void ucitavanjePodataka(String nazivDatoteke) {
+		try {
+			this.konfig = KonfiguracijaApstraktna.preuzmiKonfiguraciju(nazivDatoteke);
+		} catch (NeispravnaKonfiguracija e) {
+			e.printStackTrace();
 		}
-		ServerGlavni sg = new ServerGlavni(0, 0);
-		
-		sg.ucitavanjePodataka(args[0]);
-
-		if (sg.konfig == null) {
-			System.out.println("Problem s konfiguracijom.");
-			return;
-		}
-
-		int port = Integer.parseInt(sg.konfig.dajPostavku("port"));
-		int maksCekaca = Integer.parseInt(sg.konfig.dajPostavku("maks.cekaca"));
-		String nazivDatotekeKorisnika = sg.konfig.dajPostavku("datoteka.korisnika");
-		
-		sg.port = port;
-		sg.maksCekaca = maksCekaca;
-		
-		sg.pripremiKorisnici(nazivDatotekeKorisnika);
-		System.out.println("Broj podataka: " + sg.korisnici.size());
-		sg.obradaZahtjeva();
-
 	}
 
 	/**
@@ -99,32 +92,6 @@ public class ServerGlavni {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-	}
-
-	/**
-	 * Učitavanje konfiguracijskih podataka.
-	 *
-	 * @param nazivDatoteke naziv datoteke konfiguracijskih podataka
-	 */
-	public void ucitavanjePodataka(String nazivDatoteke) {
-		try {
-			this.konfig = KonfiguracijaApstraktna.preuzmiKonfiguraciju(nazivDatoteke);
-		} catch (NeispravnaKonfiguracija e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Konstruktor klase.
-	 *
-	 * @param port broj porta
-	 * @param maksCekaca maksimalan broj čekača
-	 */
-	public ServerGlavni(int port, int maksCekaca) {
-		super();
-		this.port = port;
-		this.maksCekaca = maksCekaca;
 	}
 
 	/**
@@ -136,7 +103,7 @@ public class ServerGlavni {
 			while (true) {
 				System.out.println("Čekam korisnika."); // TODO kasnije obrisati
 				this.veza = ss.accept();
-				
+
 				DretvaZahtjeva dretvaZahtjeva = new DretvaZahtjeva(this, konfig, veza);
 				dretvaZahtjeva.start();
 			}
@@ -147,4 +114,34 @@ public class ServerGlavni {
 
 	}
 
+	/**
+	 * Glavna metoda.
+	 *
+	 * @param args argumenti
+	 */
+	public static void main(String[] args) {
+		if (args.length != 1) {
+			System.out.println("Broj argumenata nije 1.");
+			return;
+		}
+		ServerGlavni sg = new ServerGlavni(0, 0);
+
+		sg.ucitavanjePodataka(args[0]);
+
+		if (sg.konfig == null) {
+			System.out.println("Problem s konfiguracijom.");
+			return;
+		}
+
+		int port = Integer.parseInt(sg.konfig.dajPostavku("port"));
+		int maksCekaca = Integer.parseInt(sg.konfig.dajPostavku("maks.cekaca"));
+		String nazivDatotekeKorisnika = sg.konfig.dajPostavku("datoteka.korisnika");
+
+		sg.port = port;
+		sg.maksCekaca = maksCekaca;
+
+		sg.pripremiKorisnici(nazivDatotekeKorisnika);
+		System.out.println("Broj podataka: " + sg.korisnici.size());
+		sg.obradaZahtjeva();
+	}
 }

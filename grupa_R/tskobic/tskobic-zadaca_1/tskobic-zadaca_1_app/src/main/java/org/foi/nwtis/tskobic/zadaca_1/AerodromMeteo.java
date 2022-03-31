@@ -21,10 +21,10 @@ public class AerodromMeteo implements Serializable {
 	double temp;
 	@Getter
 	@Setter
-	double tlak;
+	double vlaga;
 	@Getter
 	@Setter
-	double vlaga;
+	double tlak;
 	@Getter
 	@Setter
 	@NonNull

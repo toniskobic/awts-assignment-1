@@ -31,15 +31,14 @@ import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.Konfiguracija;
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.KonfiguracijaApstraktna;
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.NeispravnaKonfiguracija;
 
-public class ServerAerodroma {
+public class ServerUdaljenosti {
 	int port;
 	int maksCekaca;
 	Socket veza = null;
-	volatile List<Aerodrom> aerodromi = new ArrayList<>();
 
 	static public Konfiguracija konfig = null;
 
-	public ServerAerodroma(int port, int maksCekaca) {
+	public ServerUdaljenosti(int port, int maksCekaca) {
 		super();
 		this.port = port;
 		this.maksCekaca = maksCekaca;
@@ -53,34 +52,15 @@ public class ServerAerodroma {
 		}
 	}
 
-	private void pripremiAerodrome(String nazivDatotekeAerodromPodataka) {
-		try {
-			BufferedReader br = new BufferedReader(
-					new FileReader(nazivDatotekeAerodromPodataka, Charset.forName("UTF-8")));
-			while (true) {
-				String linija = br.readLine();
-				if (linija == null || linija.isEmpty()) {
-					break;
-				}
-				String[] p = linija.split(";");
-				Aerodrom aero;
-				aero = new Aerodrom(p[0], p[1], p[2], p[3]);
-				aerodromi.add(aero);
-			}
-			br.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
 	public void obradaZahtjeva() {
 
 		try (ServerSocket ss = new ServerSocket(this.port, this.maksCekaca)) {
 			while (true) {
+				System.out.println("Čekam korisnika."); // TODO kasnije obrisati
 				this.veza = ss.accept();
 
-				DretvaAerodroma dretvaAerodroma = new DretvaAerodroma(konfig, veza);
-				dretvaAerodroma.start();
+				DretvaUdaljenosti dretvaUdaljenosti = new DretvaUdaljenosti(this, konfig, veza);
+				dretvaUdaljenosti.start();
 			}
 
 		} catch (IOException ex) {
@@ -103,24 +83,24 @@ public class ServerAerodroma {
 
 		int port = Integer.parseInt(konfig.dajPostavku("port"));
 		int maksCekaca = Integer.parseInt(konfig.dajPostavku("maks.cekaca"));
-		String nazivDatotekeAerodromPodataka = konfig.dajPostavku("datoteka.aerodroma");
 
-		ServerAerodroma sa = new ServerAerodroma(port, maksCekaca);
-		sa.pripremiAerodrome(nazivDatotekeAerodromPodataka);
-		System.out.println("Broj podataka: " + sa.aerodromi.size());
-		sa.obradaZahtjeva();
+		ServerUdaljenosti su = new ServerUdaljenosti(port, maksCekaca);
+		su.obradaZahtjeva();
 	}
 
-	private class DretvaAerodroma extends Thread {
+	private class DretvaUdaljenosti extends Thread {
+		ServerUdaljenosti serverUdaljenosti = null;
 		volatile Konfiguracija konfig = null;
 		Socket veza = null;
-		String aero = "^AIRPORT$";
-		String aeroIcao = "^AIRPORT ([A-Z]{4})$";
-		String aeroIcaoUdaljenost = "^AIRPORT ([A-Z]{4}) (\\d{1,5})$";
+		static volatile List<Aerodrom> aerodromi = new ArrayList<>();
+
+		String udaljenostIcao = "^DISTANCE ([A-Z]{4}) ([A-Z]{4})$";
+		String udaljenostOcisti = "^DISTANCE CLEAR$";
 
 		// TODO pogledati za naziv dretve
-		public DretvaAerodroma(Konfiguracija konfig, Socket veza) {
+		public DretvaUdaljenosti(ServerUdaljenosti serverUdaljenosti, Konfiguracija konfig, Socket veza) {
 			super();
+			this.serverUdaljenosti = serverUdaljenosti;
 			this.konfig = konfig;
 			this.veza = veza;
 		}
@@ -145,14 +125,13 @@ public class ServerAerodroma {
 					}
 					tekst.append((char) i);
 				}
+				System.out.println(tekst.toString()); // TODO kasnije obrisati
 				this.veza.shutdownInput();
 
-				if (provjeraSintakseObrada(tekst.toString(), aero)) {
-					izvrsiAero(osw, tekst.toString());
-				} else if (provjeraSintakseObrada(tekst.toString(), aeroIcao)) {
-					izvrsiAeroIcao(osw, tekst.toString());
-				} else if (provjeraSintakseObrada(tekst.toString(), aeroIcaoUdaljenost)) {
-					izvrsiAeroIcaoUdaljenost(osw, tekst.toString());
+				if (provjeraSintakseObrada(tekst.toString(), udaljenostIcao)) {
+					izvrsiUdaljenostIcao(osw, tekst.toString());
+				} else if (provjeraSintakseObrada(tekst.toString(), udaljenostOcisti)) {
+					izvrsiBrisanjeSpremnika(osw, tekst.toString());
 				} else {
 					ispisGreske(osw, "ERROR 20 Sintaksa komande nije uredu.");
 				}
@@ -170,16 +149,57 @@ public class ServerAerodroma {
 			return rezultatUsporedbe.matches();
 		}
 
-		private void izvrsiAero(OutputStreamWriter osw, String komanda) {
-			String odgovor = "OK ";
+		private void izvrsiUdaljenostIcao(OutputStreamWriter osw, String komanda) {
+			String p[] = komanda.split(" ");
+			String icao1 = p[1];
+			String icao2 = p[2];
+
+			String odgovor = "";
+
+			Aerodrom aerodrom1 = null;
+			Aerodrom aerodrom2 = null;
+
 			synchronized (aerodromi) {
-				if(aerodromi.isEmpty()) {
-					ispisGreske(osw, "ERROR 21 Interna kolekcija aerodroma je prazna.");
+				aerodrom1 = aerodromi.stream().filter(a -> a.getIcao().equals(icao1)).findAny().orElse(null);
+				aerodrom2 = aerodromi.stream().filter(a -> a.getIcao().equals(icao2)).findAny().orElse(null);
+			}
+
+			if (aerodrom1 == null || aerodrom2 == null) {
+				if (aerodrom1 == null) {
+					String odgovorAeroServer = dobaviAerodrom(icao1);
+					aerodrom1 = izvrsiAerodromPretvorbu(odgovorAeroServer);
+					synchronized (aerodromi) {
+						aerodromi.add(aerodrom1);
+					}
 				}
-				for (Aerodrom aerodrom : aerodromi) {
-					odgovor = odgovor + aerodrom.getIcao() + "; ";
+				if (aerodrom2 == null) {
+					String odgovorAeroServer = dobaviAerodrom(icao2);
+					aerodrom2 = izvrsiAerodromPretvorbu(odgovorAeroServer);
+					synchronized (aerodromi) {
+						aerodromi.add(aerodrom2);
+					}
 				}
 			}
+			double udaljenost = (double)udaljenost(Float.valueOf(aerodrom1.getGpsGS()), Float.valueOf(aerodrom1.getGpsGD()),
+					Float.valueOf(aerodrom2.getGpsGS()), Float.valueOf(aerodrom2.getGpsGD()));
+
+			odgovor = "OK " + (int) Math.round(udaljenost);
+
+			try {
+				osw.write(odgovor);
+				osw.flush();
+				osw.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		}
+
+		private void izvrsiBrisanjeSpremnika(OutputStreamWriter osw, String komanda) {
+			synchronized (aerodromi) {
+				aerodromi.clear();
+			}
+			String odgovor = "OK";
 
 			try {
 				osw.write(odgovor);
@@ -190,75 +210,51 @@ public class ServerAerodroma {
 			}
 		}
 
-		private void izvrsiAeroIcao(OutputStreamWriter osw, String komanda) {
-			String p[] = komanda.split(" ");
-			String icao = p[1];
+		private float udaljenost(float gs1, float gd1, float gs2, float gd2) {
+			double earthRadius = 6371000; // meters
+			double dLat = Math.toRadians(gs2 - gs1);
+			double dLng = Math.toRadians(gd2 - gd1);
+			double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(Math.toRadians(gs1))
+					* Math.cos(Math.toRadians(gs2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+			double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+			float dist = (float) (earthRadius * c);
+			dist = dist / 1000;
 
-			String odgovor = "";
-
-			Aerodrom aerodrom = null;
-			
-			synchronized (aerodromi) {
-				aerodrom = aerodromi.stream().filter(a -> a.getIcao().equals(icao)).findAny().orElse(null);	
-			}
-
-			if (aerodrom == null) {
-				ispisGreske(osw, "ERROR 21 Aerodrom '" + icao + "' ne postoji.");
-			} else {
-				odgovor = "OK " + aerodrom.getIcao() + " \"" + aerodrom.getNaziv() + "\" " + aerodrom.getGpsGS() + " "
-						+ aerodrom.getGpsGD();
-
-				try {
-					osw.write(odgovor);
-					osw.flush();
-					osw.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
+			return dist;
 		}
 
-		private void izvrsiAeroIcaoUdaljenost(OutputStreamWriter osw, String komanda) {
-			String p[] = komanda.split(" ");
-			String icao = p[1];
-			double maksUdaljenost = Double.valueOf(p[2]);
+		private String dobaviAerodrom(String icao) {
+			String adresaAeroServer = "";
+			int portMeteoServer = 0;
 
-			String odgovor = "";
-			
-			Aerodrom aerodrom = null;
-			
-			synchronized (aerodromi) {
-				aerodrom = aerodromi.stream().filter(a -> a.getIcao().equals(icao)).findAny().orElse(null);
+			synchronized (konfig) {
+				adresaAeroServer = this.konfig.dajPostavku("server.aerodroma.adresa");
+				portMeteoServer = Integer.parseInt(this.konfig.dajPostavku("server.aerodroma.port"));
 			}
 
-			if (aerodrom == null) {
-				ispisGreske(osw, "ERROR 21 Aerodrom '" + icao + "' ne postoji.");
-			} else {
-				String adresaServerUdaljenosti = "";
-				int portServerUdaljenosti = 0;
-				synchronized (konfig) {
-					adresaServerUdaljenosti = this.konfig.dajPostavku("server.udaljenosti.adresa");
-					portServerUdaljenosti = Integer.parseInt(this.konfig.dajPostavku("server.udaljenosti.port"));
-				}
-				odgovor = "OK";
-				for (Aerodrom am : aerodromi) {
-					String o = posaljiKomandu(adresaServerUdaljenosti, portServerUdaljenosti,
-							"DISTANCE " + icao + " " + am.getIcao());
-					String polje[] = o.split(" ");
-					int udaljenost = Integer.parseInt(polje[1]);
-					if (udaljenost < maksUdaljenost && udaljenost > 0) {
-						odgovor = odgovor + " " + am.getIcao() + " " + udaljenost + ";";
-					}
-				}
-				try {
-					osw.write(odgovor);
-					osw.flush();
-					osw.close();
-				} catch (IOException e) {
-					e.printStackTrace();
+			String odgovorAeroServer = posaljiKomandu(adresaAeroServer, portMeteoServer, "AIRPORT " + icao);
+
+			return odgovorAeroServer;
+		}
+
+		private Aerodrom izvrsiAerodromPretvorbu(String odgovor) {
+			String polje[] = new String[5];
+			Pattern uzorak = Pattern
+					.compile("^(OK) ([A-Z]{4}) \"(.*?)\" (-?\\d{1,3}\\.\\d{1,20}) (-?\\d{1,3}\\.\\d{1,20})$");
+			Matcher m = uzorak.matcher(odgovor);
+			while (m.find()) {
+				for (int j = 1; j <= m.groupCount(); j++) {
+					polje[j - 1] = m.group(j);
 				}
 			}
 
+			String icao = polje[1];
+			String naziv = polje[2];
+			String gpsGS = polje[3];
+			String gpsGD = polje[4];
+
+			Aerodrom aerodrom = new Aerodrom(icao, naziv, gpsGS, gpsGD);
+			return aerodrom;
 		}
 
 		private void ispisGreske(OutputStreamWriter osw, String odgovor) {
