@@ -8,15 +8,9 @@ import java.net.SocketException;
 import java.nio.charset.Charset;
 
 public class KorisnikGlavni {
-	String komanda_1 = "AIRPORT";
+	String komanda_1 = "METEO LDZA 2021-01-07";
 	String adresa = "localhost";
-	int port = 8001;
-
-	public static void main(String[] args) {
-		KorisnikGlavni kg = new KorisnikGlavni();
-		String odgovor = kg.posaljiKomandu(kg.adresa, kg.port, kg.komanda_1);
-		kg.ispis(odgovor);
-	}
+	int port = 8003;
 
 	public String posaljiKomandu(String adresa, int port, String komanda) {
 		try (Socket veza = new Socket(adresa, port);
@@ -47,7 +41,11 @@ public class KorisnikGlavni {
 
 	private void ispis(String message) {
 		System.out.println(message);
-		
 	}
 
+	public static void main(String[] args) {
+		KorisnikGlavni kg = new KorisnikGlavni();
+		String odgovor = kg.posaljiKomandu(kg.adresa, kg.port, kg.komanda_1);
+		kg.ispis(odgovor);
+	}
 }

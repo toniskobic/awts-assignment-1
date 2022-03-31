@@ -12,16 +12,19 @@ import java.util.regex.Pattern;
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.Konfiguracija;
 
 public class DretvaZahtjeva extends Thread {
+	static volatile int brojDretvi = 0;
 	ServerGlavni serverGlavni = null;
 	Konfiguracija konfig = null;
 	Socket veza = null;
+	String aero = "^AIRPORT$";
+	String aeroIcao = "^AIRPORT ([A-Z]{4})$";
+	String aeroIcaoUdaljenost = "^AIRPORT ([A-Z]{4}) (\\d{1,5})$";
 	String meteoIcao = "^METEO ([A-Z]{4})$";
 	String meteoIcaoDatum = "^METEO ([A-Z]{4}) (\\d{4}-\\d{2}-\\d{2})$";
 
-	
-	// TODO pogledati za naziv dretve
 	public DretvaZahtjeva(ServerGlavni serverGlavni, Konfiguracija konfig, Socket veza) {
 		super();
+		setName("tskobic_" + brojDretvi);
 		this.serverGlavni = serverGlavni;
 		this.konfig = konfig;
 		this.veza = veza;
@@ -35,6 +38,9 @@ public class DretvaZahtjeva extends Thread {
 
 	@Override
 	public void run() {
+		synchronized (this) {
+			brojDretvi++;
+		}
 		try (InputStreamReader isr = new InputStreamReader(this.veza.getInputStream(), Charset.forName("UTF-8"));
 				OutputStreamWriter osw = new OutputStreamWriter(this.veza.getOutputStream(),
 						Charset.forName("UTF-8"));) {
@@ -50,36 +56,38 @@ public class DretvaZahtjeva extends Thread {
 			System.out.println(tekst.toString()); // TODO kasnije obrisati
 			this.veza.shutdownInput();
 
-			// TODO prepoznati komande
-			Pattern pMeteoIcao = Pattern.compile(meteoIcao);
-			Pattern pMeteoIcaoDatum = Pattern.compile(meteoIcaoDatum);
-			Matcher mMeteoIcao = pMeteoIcao.matcher(tekst.toString());
-			Matcher mMeteoIcaoDatum = pMeteoIcaoDatum.matcher(tekst.toString());
-
-			if (mMeteoIcao.matches()) {
-				izvrsiMeteoIcao(osw, tekst.toString());
-			} else if (mMeteoIcaoDatum.matches()) {
-				// TODO metoda za icao i datum
+			if (provjeraSintakseObrada(tekst.toString(), meteoIcao)) {
+				izvrsiNaredbu(osw, tekst.toString(), "server.meteo.adresa", "server.meteo.port");
+			} else if (provjeraSintakseObrada(tekst.toString(), meteoIcaoDatum)) {
+				izvrsiNaredbu(osw, tekst.toString(), "server.meteo.adresa", "server.meteo.port");
 			} else {
-				krivaKomanda(osw, "ERROR 10 Sintaksa komande nije uredu.");
+				krivaKomanda(osw, "ERROR 40 Sintaksa komande nije uredu.");
 			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 	}
 
-	private void izvrsiMeteoIcao(OutputStreamWriter osw, String komanda) {
-		String p[] = komanda.split(" ");
-		String icao = p[1];
-		String adresaMeteoServer = this.konfig.dajPostavku("server.meteo.adresa");
-		int portMeteoServer = Integer.parseInt(this.konfig.dajPostavku("server.meteo.port"));
+	private boolean provjeraSintakseObrada(String komanda, String regularniIzraz) {
+		Pattern izraz = Pattern.compile(regularniIzraz);
+		Matcher rezultatUsporedbe = izraz.matcher(komanda);
+
+		return rezultatUsporedbe.matches();
+	}
+
+	private void izvrsiNaredbu(OutputStreamWriter osw, String komanda, String konfigAdresa, String konfigPort) {
+		String adresaMeteoServer = "";
+		int portMeteoServer = 0;
+		synchronized (konfig) {
+			adresaMeteoServer = this.konfig.dajPostavku(konfigAdresa);
+			portMeteoServer = Integer.parseInt(this.konfig.dajPostavku(konfigPort));			
+		}
 		String odgovor = this.posaljiKomandu(adresaMeteoServer, portMeteoServer, komanda);
 		try {
 			osw.write(odgovor);
 			osw.flush();
-		} catch (IOException e) {		
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
@@ -129,7 +137,5 @@ public class DretvaZahtjeva extends Thread {
 
 	private void ispis(String message) {
 		System.out.println(message);
-		
 	}
-	
 }

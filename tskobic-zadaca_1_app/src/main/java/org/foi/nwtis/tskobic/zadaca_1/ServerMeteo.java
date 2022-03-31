@@ -150,7 +150,7 @@ public class ServerMeteo {
 		} else {
 			AerodromMeteo am = fAerodromiMeteo.stream().max(Comparator.comparing(AerodromMeteo::getTime))
 					.orElseThrow(NoSuchElementException::new);
-			odgovor = "OK " + am.temp + " " + am.vlaga + " " + am.tlak + " " + am.vrijeme + ";";
+			odgovor = "OK " + zaokruzi(am.temp, 1) + " " + am.vlaga + " " + am.tlak + " " + am.vrijeme + ";";
 			try {
 				osw.write(odgovor);
 				osw.flush();
@@ -159,6 +159,11 @@ public class ServerMeteo {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private double zaokruzi (double vrijednost, int decimala) {
+	    int d = (int) Math.pow(10, decimala);
+	    return (double) Math.round(vrijednost * d) / d;
 	}
 
 	private void izvrsiMeteoIcaoDatum(OutputStreamWriter osw, String komanda) {
