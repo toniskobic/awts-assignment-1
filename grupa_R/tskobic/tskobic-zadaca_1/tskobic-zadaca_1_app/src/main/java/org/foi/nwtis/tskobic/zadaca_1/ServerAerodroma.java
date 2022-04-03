@@ -9,42 +9,59 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.Charset;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
-import java.util.NoSuchElementException;
-import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.Konfiguracija;
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.KonfiguracijaApstraktna;
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.NeispravnaKonfiguracija;
 
+/**
+ * Glavna klasa poslužitelja ServerAerodrom
+ */
 public class ServerAerodroma {
+	
+	/** broj porta. */
 	int port;
+	
+	/** maksimalni broj čekača. */
 	int maksCekaca;
+	
+	/** maksimalno čekanje na spajanje klijenta. */
+	int maksCekanje;
+	
+	/** veza. */
 	Socket veza = null;
+	
+	/** Kolekcija aerodroma. */
 	volatile List<Aerodrom> aerodromi = new ArrayList<>();
 
+	/** Konfiguracijski podaci. */
 	static public Konfiguracija konfig = null;
 
-	public ServerAerodroma(int port, int maksCekaca) {
+	/**
+	 * Konstruktor klase.
+	 *
+	 * @param port broj   porta
+	 * @param maksCekaca  maksimalan broj čekača
+	 * @param maksCekanje maksimalno čekanje na spajanje klijenta
+	 */
+	public ServerAerodroma(int port, int maksCekaca, int maksCekanje) {
 		super();
 		this.port = port;
 		this.maksCekaca = maksCekaca;
+		this.maksCekanje = maksCekanje;
 	}
 
+	/**
+	 * Učitavanje konfiguracijskih podataka.
+	 *
+	 * @param nazivDatoteke naziv datoteke konfiguracijskih podataka
+	 */
 	private static void ucitavanjePodataka(String nazivDatoteke) {
 		try {
 			konfig = KonfiguracijaApstraktna.preuzmiKonfiguraciju(nazivDatoteke);
@@ -53,6 +70,11 @@ public class ServerAerodroma {
 		}
 	}
 
+	/**
+	 * Pripremi (učitavanje) aerodroma
+	 *
+	 * @param nazivDatotekeAerodromPodataka naziv datoteke aerodrom podataka
+	 */
 	private void pripremiAerodrome(String nazivDatotekeAerodromPodataka) {
 		try {
 			BufferedReader br = new BufferedReader(
@@ -73,9 +95,13 @@ public class ServerAerodroma {
 		}
 	}
 
+	/**
+	 * Obrada zahtjeva.
+	 */
 	public void obradaZahtjeva() {
 
 		try (ServerSocket ss = new ServerSocket(this.port, this.maksCekaca)) {
+			ss.setSoTimeout(maksCekanje);
 			while (true) {
 				this.veza = ss.accept();
 
@@ -89,6 +115,11 @@ public class ServerAerodroma {
 
 	}
 
+	/**
+	 * Glavna metoda
+	 *
+	 * @param args argumenti
+	 */
 	public static void main(String[] args) {
 		if (args.length != 1) {
 			System.out.println("Broj argumenata nije 1.");
@@ -103,34 +134,58 @@ public class ServerAerodroma {
 
 		int port = Integer.parseInt(konfig.dajPostavku("port"));
 		int maksCekaca = Integer.parseInt(konfig.dajPostavku("maks.cekaca"));
+		int maksCekanje = Integer.parseInt(konfig.dajPostavku("maks.cekanje"));
 		String nazivDatotekeAerodromPodataka = konfig.dajPostavku("datoteka.aerodroma");
 
-		ServerAerodroma sa = new ServerAerodroma(port, maksCekaca);
+		ServerAerodroma sa = new ServerAerodroma(port, maksCekaca, maksCekanje);
 		sa.pripremiAerodrome(nazivDatotekeAerodromPodataka);
 		System.out.println("Broj podataka: " + sa.aerodromi.size());
 		sa.obradaZahtjeva();
 	}
 
+	/**
+	 * Klasa dretva DretvaAerodroma.
+	 */
 	private class DretvaAerodroma extends Thread {
+		
+		/** konfiguracijski podaci. */
 		volatile Konfiguracija konfig = null;
+		
+		/** veza. */
 		Socket veza = null;
+		
+		/** dozvoljeni izraz za naredbu aero. */
 		String aero = "^AIRPORT$";
+		
+		/** dozvoljeni izraz za naredbu aero. icao. */
 		String aeroIcao = "^AIRPORT ([A-Z]{4})$";
+		
+		/** dozvoljeni izraz za naredbu aero icao udaljenost. */
 		String aeroIcaoUdaljenost = "^AIRPORT ([A-Z]{4}) (\\d{1,5})$";
 
-		// TODO pogledati za naziv dretve
+		/**
+		 * Konstruktor klase
+		 *
+		 * @param konfig konfiguracijski podaci
+		 * @param veza veza
+		 */
 		public DretvaAerodroma(Konfiguracija konfig, Socket veza) {
 			super();
 			this.konfig = konfig;
 			this.veza = veza;
 		}
 
+		/**
+		 * Metoda za pokretanje dretve
+		 */
 		@Override
 		public synchronized void start() {
-			// TODO Auto-generated method stub
 			super.start();
 		}
 
+		/**
+		 * Glavna metoda za rad dretve
+		 */
 		@Override
 		public void run() {
 			try (InputStreamReader isr = new InputStreamReader(this.veza.getInputStream(), Charset.forName("UTF-8"));
@@ -163,6 +218,13 @@ public class ServerAerodroma {
 
 		}
 
+		/**
+		 * Provjera sintakse dozvoljenog izraza.
+		 *
+		 * @param komanda komanda
+		 * @param regularniIzraz dozvoljeni izraz
+		 * @return true, ako uspješno
+		 */
 		private boolean provjeraSintakseObrada(String komanda, String regularniIzraz) {
 			Pattern izraz = Pattern.compile(regularniIzraz);
 			Matcher rezultatUsporedbe = izraz.matcher(komanda);
@@ -170,10 +232,16 @@ public class ServerAerodroma {
 			return rezultatUsporedbe.matches();
 		}
 
+		/**
+		 * Izvršavanje naredbe aero
+		 *
+		 * @param osw izlazni tok podataka
+		 * @param komanda komanda
+		 */
 		private void izvrsiAero(OutputStreamWriter osw, String komanda) {
 			String odgovor = "OK ";
 			synchronized (aerodromi) {
-				if(aerodromi.isEmpty()) {
+				if (aerodromi.isEmpty()) {
 					ispisGreske(osw, "ERROR 21 Interna kolekcija aerodroma je prazna.");
 				}
 				for (Aerodrom aerodrom : aerodromi) {
@@ -190,6 +258,12 @@ public class ServerAerodroma {
 			}
 		}
 
+		/**
+		 * Izvrsšavanje naredbe aero icao
+		 *
+		 * @param osw izlazni tok podataka
+		 * @param komanda komanda
+		 */
 		private void izvrsiAeroIcao(OutputStreamWriter osw, String komanda) {
 			String p[] = komanda.split(" ");
 			String icao = p[1];
@@ -197,9 +271,9 @@ public class ServerAerodroma {
 			String odgovor = "";
 
 			Aerodrom aerodrom = null;
-			
+
 			synchronized (aerodromi) {
-				aerodrom = aerodromi.stream().filter(a -> a.getIcao().equals(icao)).findAny().orElse(null);	
+				aerodrom = aerodromi.stream().filter(a -> a.getIcao().equals(icao)).findAny().orElse(null);
 			}
 
 			if (aerodrom == null) {
@@ -218,15 +292,21 @@ public class ServerAerodroma {
 			}
 		}
 
+		/**
+		 * Izvršavanje naredbe aero icao udaljenost.
+		 *
+		 * @param osw izlazni tok podataka
+		 * @param komanda komanda
+		 */
 		private void izvrsiAeroIcaoUdaljenost(OutputStreamWriter osw, String komanda) {
 			String p[] = komanda.split(" ");
 			String icao = p[1];
 			double maksUdaljenost = Double.valueOf(p[2]);
 
 			String odgovor = "";
-			
+
 			Aerodrom aerodrom = null;
-			
+
 			synchronized (aerodromi) {
 				aerodrom = aerodromi.stream().filter(a -> a.getIcao().equals(icao)).findAny().orElse(null);
 			}
@@ -261,6 +341,12 @@ public class ServerAerodroma {
 
 		}
 
+		/**
+		 * Ispisivanje greške.
+		 *
+		 * @param osw izlazni tok podataka
+		 * @param odgovor odgovor
+		 */
 		private void ispisGreske(OutputStreamWriter osw, String odgovor) {
 			try {
 				osw.write(odgovor);
@@ -271,12 +357,22 @@ public class ServerAerodroma {
 			}
 		}
 
+		/**
+		 * Metoda za prekidanje rada dretve.
+		 */
 		@Override
 		public void interrupt() {
-			// TODO Auto-generated method stub
 			super.interrupt();
 		}
 
+		/**
+		 * Slanje komande serveru
+		 *
+		 * @param adresa adresa servera
+		 * @param port port servera
+		 * @param komanda komanda
+		 * @return the string
+		 */
 		public String posaljiKomandu(String adresa, int port, String komanda) {
 			try (Socket veza = new Socket(adresa, port);
 					InputStreamReader isr = new InputStreamReader(veza.getInputStream(), Charset.forName("UTF-8"));
@@ -305,6 +401,11 @@ public class ServerAerodroma {
 			return null;
 		}
 
+		/**
+		 * Ispisivanje poruke na konzolu.
+		 *
+		 * @param message poruka
+		 */
 		private void ispis(String message) {
 			System.out.println(message);
 

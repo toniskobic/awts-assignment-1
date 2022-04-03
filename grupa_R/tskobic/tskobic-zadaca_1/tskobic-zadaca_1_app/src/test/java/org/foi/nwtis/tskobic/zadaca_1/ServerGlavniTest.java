@@ -33,7 +33,7 @@ class ServerGlavniTest {
 
 	@BeforeEach
 	void setUp() throws Exception {
-		serverGlavni = new ServerGlavni(8003, 10);
+		serverGlavni = new ServerGlavni(8003, 10, 1000);
 	}
 
 	@AfterEach

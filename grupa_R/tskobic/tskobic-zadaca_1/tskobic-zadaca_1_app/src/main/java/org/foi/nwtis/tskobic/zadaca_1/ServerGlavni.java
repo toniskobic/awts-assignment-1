@@ -3,20 +3,14 @@ package org.foi.nwtis.tskobic.zadaca_1;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.nio.charset.Charset;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.Konfiguracija;
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.KonfiguracijaApstraktna;
@@ -32,6 +26,9 @@ public class ServerGlavni {
 
 	/** maksimalni broj čekača. */
 	int maksCekaca;
+
+	/** maksimalni broj čekanja. */
+	int maksCekanje;
 
 	/** veza. */
 	Socket veza = null;
@@ -51,10 +48,11 @@ public class ServerGlavni {
 	 * @param port       broj porta
 	 * @param maksCekaca maksimalan broj čekača
 	 */
-	public ServerGlavni(int port, int maksCekaca) {
+	public ServerGlavni(int port, int maksCekaca, int maksCekanje) {
 		super();
 		this.port = port;
 		this.maksCekaca = maksCekaca;
+		this.maksCekanje = maksCekanje;
 	}
 
 	/**
@@ -100,14 +98,13 @@ public class ServerGlavni {
 	public void obradaZahtjeva() {
 
 		try (ServerSocket ss = new ServerSocket(this.port, this.maksCekaca)) {
+			ss.setSoTimeout(maksCekanje);
 			while (true) {
-				System.out.println("Čekam korisnika."); // TODO kasnije obrisati
 				this.veza = ss.accept();
 
 				DretvaZahtjeva dretvaZahtjeva = new DretvaZahtjeva(this, konfig, veza);
 				dretvaZahtjeva.start();
 			}
-
 		} catch (IOException ex) {
 			Logger.getLogger(ServerGlavni.class.getName()).log(Level.SEVERE, null, ex);
 		}
@@ -124,7 +121,7 @@ public class ServerGlavni {
 			System.out.println("Broj argumenata nije 1.");
 			return;
 		}
-		ServerGlavni sg = new ServerGlavni(0, 0);
+		ServerGlavni sg = new ServerGlavni(0, 0, 0);
 
 		sg.ucitavanjePodataka(args[0]);
 
@@ -135,10 +132,12 @@ public class ServerGlavni {
 
 		int port = Integer.parseInt(sg.konfig.dajPostavku("port"));
 		int maksCekaca = Integer.parseInt(sg.konfig.dajPostavku("maks.cekaca"));
+		int maksCekanje = Integer.parseInt(sg.konfig.dajPostavku("maks.cekanje"));
 		String nazivDatotekeKorisnika = sg.konfig.dajPostavku("datoteka.korisnika");
 
 		sg.port = port;
 		sg.maksCekaca = maksCekaca;
+		sg.maksCekanje = maksCekanje;
 
 		sg.pripremiKorisnici(nazivDatotekeKorisnika);
 		System.out.println("Broj podataka: " + sg.korisnici.size());

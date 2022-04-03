@@ -2,6 +2,6 @@
 #Tue Mar 09 15:22:47 CET 2022
 port=8002
 maks.cekaca=10
-maks.cekanje=1000
+maks.cekanje=1800000
 server.aerodroma.adresa=localhost
 server.aerodroma.port=8001
