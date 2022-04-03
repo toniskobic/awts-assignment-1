@@ -18,21 +18,20 @@ import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.Konfiguracija;
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.KonfiguracijaApstraktna;
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.NeispravnaKonfiguracija;
 
-
 /**
  * Glavna klasa poslužitelja ServerUdaljenosti
  */
 public class ServerUdaljenosti {
-	
+
 	/** broj porta. */
 	int port;
-	
+
 	/** maksimalni broj čekača. */
 	int maksCekaca;
-	
+
 	/** maksimalno čekanje na spajanje klijenta. */
 	int maksCekanje;
-	
+
 	/** veza. */
 	Socket veza = null;
 
@@ -42,8 +41,8 @@ public class ServerUdaljenosti {
 	/**
 	 * Konstruktor klase.
 	 *
-	 * @param port port porta
-	 * @param maksCekaca maksimalni broj čekača
+	 * @param port        port porta
+	 * @param maksCekaca  maksimalni broj čekača
 	 * @param maksCekanje maksimalno čekanje na spajanje klijenta
 	 */
 	public ServerUdaljenosti(int port, int maksCekaca, int maksCekanje) {
@@ -116,19 +115,19 @@ public class ServerUdaljenosti {
 	 * Klasa dretva DretvaUdaljenosti
 	 */
 	private class DretvaUdaljenosti extends Thread {
-		
+
 		/** konfiguracijski podaci. */
 		volatile Konfiguracija konfig = null;
-		
+
 		/** veza. */
 		Socket veza = null;
-		
+
 		/** lokalna kolekcija aerodroma. */
 		static volatile List<Aerodrom> aerodromi = new ArrayList<>();
 
 		/** dozvoljeni izraz za naredbu udaljenost icao. */
 		String udaljenostIcao = "^DISTANCE ([A-Z]{4}) ([A-Z]{4})$";
-		
+
 		/** dozvoljeni izraz za naredbu udaljenost ocisti. */
 		String udaljenostOcisti = "^DISTANCE CLEAR$";
 
@@ -136,7 +135,7 @@ public class ServerUdaljenosti {
 		 * Konstruktor klase.
 		 *
 		 * @param konfig konfiguracijski podaci
-		 * @param veza veza
+		 * @param veza   veza
 		 */
 		// TODO pogledati za naziv dretve
 		public DretvaUdaljenosti(Konfiguracija konfig, Socket veza) {
@@ -190,7 +189,7 @@ public class ServerUdaljenosti {
 		/**
 		 * Provjera sintakse dozvoljenog izraza.
 		 *
-		 * @param komanda komanda
+		 * @param komanda        komanda
 		 * @param regularniIzraz dozvoljeni izraz
 		 * @return true, ako uspješno
 		 */
@@ -204,7 +203,7 @@ public class ServerUdaljenosti {
 		/**
 		 * Izvršavanje naredbe udaljenost icao.
 		 *
-		 * @param osw izlazni tok podataka
+		 * @param osw     izlazni tok podataka
 		 * @param komanda komanda
 		 */
 		private void izvrsiUdaljenostIcao(OutputStreamWriter osw, String komanda) {
@@ -225,6 +224,13 @@ public class ServerUdaljenosti {
 			if (aerodrom1 == null || aerodrom2 == null) {
 				if (aerodrom1 == null) {
 					String odgovorAeroServer = dobaviAerodrom(icao1);
+					if (odgovorAeroServer == null) {
+						ispisGreske(osw, "ERROR 32 Server ServerAerodroma ne radi.");
+						return;
+					} else if (odgovorAeroServer.startsWith("ERROR")) {
+						ispisGreske(osw, "ERROR 31 Ne postoji aerodrom za traženi " + icao1 + " aerodrom.");
+						return;
+					}
 					aerodrom1 = izvrsiAerodromPretvorbu(odgovorAeroServer);
 					synchronized (aerodromi) {
 						aerodromi.add(aerodrom1);
@@ -232,6 +238,13 @@ public class ServerUdaljenosti {
 				}
 				if (aerodrom2 == null) {
 					String odgovorAeroServer = dobaviAerodrom(icao2);
+					if (odgovorAeroServer == null) {
+						ispisGreske(osw, "ERROR 32 Server ServerAerodroma ne radi.");
+						return;
+					} else if (odgovorAeroServer.startsWith("ERROR")) {
+						ispisGreske(osw, "ERROR 31 Ne postoji aerodrom za traženi " + icao2 + " aerodrom.");
+						return;
+					}
 					aerodrom2 = izvrsiAerodromPretvorbu(odgovorAeroServer);
 					synchronized (aerodromi) {
 						aerodromi.add(aerodrom2);
@@ -257,7 +270,7 @@ public class ServerUdaljenosti {
 		/**
 		 * Izvršavanje naredbe brisanje spremnika.
 		 *
-		 * @param osw izlazni tok podataka
+		 * @param osw     izlazni tok podataka
 		 * @param komanda komanda
 		 */
 		private void izvrsiBrisanjeSpremnika(OutputStreamWriter osw, String komanda) {
@@ -346,7 +359,7 @@ public class ServerUdaljenosti {
 		/**
 		 * Ispisivanje greške.
 		 *
-		 * @param osw izlazni tok podataka
+		 * @param osw     izlazni tok podataka
 		 * @param odgovor odgovor
 		 */
 		private void ispisGreske(OutputStreamWriter osw, String odgovor) {
@@ -370,8 +383,8 @@ public class ServerUdaljenosti {
 		/**
 		 * Slanje komande serveru
 		 *
-		 * @param adresa adresa servera
-		 * @param port broj porta
+		 * @param adresa  adresa servera
+		 * @param port    broj porta
 		 * @param komanda komanda
 		 * @return the string
 		 */
