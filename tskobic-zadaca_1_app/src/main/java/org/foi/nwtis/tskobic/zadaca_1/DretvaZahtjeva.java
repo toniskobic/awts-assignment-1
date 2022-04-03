@@ -153,7 +153,7 @@ public class DretvaZahtjeva extends Thread {
 	 * @param osw     izlazni tok podataka
 	 * @param komanda omanda
 	 */
-	private void obradaZahtjeva(OutputStreamWriter osw, String komanda) {
+	public void obradaZahtjeva(OutputStreamWriter osw, String komanda) {
 		String p[] = podijeliKomandu(komanda);
 		if (autentikacijaKorisnika(p[0])) {
 			if (provjeraSintakseObrada(p[1], meteoIcao) || provjeraSintakseObrada(p[1], meteoIcaoDatum)
@@ -183,7 +183,7 @@ public class DretvaZahtjeva extends Thread {
 	 * @param komanda komanda
 	 * @return the string[]
 	 */
-	private String[] podijeliKomandu(String komanda) {
+	public String[] podijeliKomandu(String komanda) {
 		String polje[] = new String[2];
 		Pattern uzorak = Pattern.compile(kompletnaKomanda);
 		Matcher m = uzorak.matcher(komanda);
@@ -202,7 +202,7 @@ public class DretvaZahtjeva extends Thread {
 	 * @param komanda komanda
 	 * @return true, if successful
 	 */
-	private boolean autentikacijaKorisnika(String komanda) {
+	public boolean autentikacijaKorisnika(String komanda) {
 		String p[] = komanda.split(" ");
 		Korisnik korisnik = serverGlavni.korisnici.stream()
 				.filter(a -> a.getKorisnickoIme().equals(p[1]) && a.getLozinka().equals(p[3])).findAny().orElse(null);
@@ -220,7 +220,7 @@ public class DretvaZahtjeva extends Thread {
 	 * @param regularniIzraz dozvoljeni izraz
 	 * @return true, if successful
 	 */
-	private boolean provjeraSintakseObrada(String komanda, String regularniIzraz) {
+	public boolean provjeraSintakseObrada(String komanda, String regularniIzraz) {
 		Pattern izraz = Pattern.compile(regularniIzraz);
 		Matcher rezultatUsporedbe = izraz.matcher(komanda);
 
@@ -235,7 +235,7 @@ public class DretvaZahtjeva extends Thread {
 	 * @param konfigDat the konfig dat
 	 */
 	@SuppressWarnings("unchecked")
-	private void izvrsiMedjuspremnikNaredbu(OutputStreamWriter osw, String komanda, String konfigDat) {
+	public void izvrsiMedjuspremnikNaredbu(OutputStreamWriter osw, String komanda, String konfigDat) {
 		if (provjeraSintakseObrada(komanda, medjuspremnikOcisti)) {
 			chm.clear();
 			ispisPoruke(osw, "OK");
@@ -268,7 +268,7 @@ public class DretvaZahtjeva extends Thread {
 	 * @param datoteka naziv datoteke
 	 * @param obj      objekt koji se serijalizira
 	 */
-	private void serijalizacija(OutputStreamWriter osw, String datoteka, Object obj) {
+	public void serijalizacija(OutputStreamWriter osw, String datoteka, Object obj) {
 		FileOutputStream out = null;
 
 		try {
@@ -295,7 +295,7 @@ public class DretvaZahtjeva extends Thread {
 	 * @param datoteka datoteka
 	 * @return the object
 	 */
-	private Object deserijalizacija(OutputStreamWriter osw, String datoteka) {
+	public Object deserijalizacija(OutputStreamWriter osw, String datoteka) {
 		File f = new File(datoteka);
 		if (f.exists() && !f.isDirectory()) {
 			try {
@@ -324,7 +324,7 @@ public class DretvaZahtjeva extends Thread {
 	 * @param konfigPort   broj porta
 	 * @param server       oznaka koja predstavlja server
 	 */
-	private void izvrsiNaredbu(OutputStreamWriter osw, String komanda, String konfigAdresa, String konfigPort,
+	public void izvrsiNaredbu(OutputStreamWriter osw, String komanda, String konfigAdresa, String konfigPort,
 			char server) {
 		String adresaServer = "";
 		int portServer = 0;
@@ -354,7 +354,7 @@ public class DretvaZahtjeva extends Thread {
 	 *
 	 * @param komanda komanda
 	 */
-	private void izvrsiSpremanje(String komanda) {
+	public void izvrsiSpremanje(String komanda) {
 		if (chm.containsKey(komanda)) {
 			chm.computeIfPresent(komanda, (k, v) -> new Medjuspremnik(v.brojKoristenja + 1, new Date()));
 		} else {
@@ -368,7 +368,7 @@ public class DretvaZahtjeva extends Thread {
 	 * @param osw     izlazni tok podataka
 	 * @param odgovor odgovor
 	 */
-	private void ispisPoruke(OutputStreamWriter osw, String odgovor) {
+	public void ispisPoruke(OutputStreamWriter osw, String odgovor) {
 		try {
 			osw.write(odgovor);
 			osw.flush();
@@ -426,7 +426,7 @@ public class DretvaZahtjeva extends Thread {
 	 *
 	 * @param message poruka
 	 */
-	private void ispis(String message) {
+	public void ispis(String message) {
 		System.out.println(message);
 	}
 }
