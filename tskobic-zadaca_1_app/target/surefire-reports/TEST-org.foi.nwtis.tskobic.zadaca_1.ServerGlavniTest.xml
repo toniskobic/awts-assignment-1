@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="org.foi.nwtis.tskobic.zadaca_1.ServerGlavniTest" time="0.329" tests="5" errors="0" skipped="0" failures="1">
+  <properties>
+    <property name="java.specification.version" value="17"/>
+    <property name="sun.cpu.isalist" value="amd64"/>
+    <property name="sun.jnu.encoding" value="Cp1250"/>
+    <property name="java.class.path" value="C:\Users\Toni\NWTiS_1\tskobic\tskobic-zadaca_1\tskobic-zadaca_1_app\target\test-classes;C:\Users\Toni\NWTiS_1\tskobic\tskobic-zadaca_1\tskobic-zadaca_1_app\target\classes;C:\Users\Toni\.m2\repository\org\foi\nwtis\tskobic\tskobic-zadaca_1_lib\1.0.1\tskobic-zadaca_1_lib-1.0.1.jar;C:\Users\Toni\.m2\repository\com\google\code\gson\gson\2.9.0\gson-2.9.0.jar;C:\Users\Toni\.m2\repository\org\projectlombok\lombok\1.18.22\lombok-1.18.22.jar;C:\Users\Toni\.m2\repository\org\junit\jupiter\junit-jupiter-engine\5.8.2\junit-jupiter-engine-5.8.2.jar;C:\Users\Toni\.m2\repository\org\junit\platform\junit-platform-engine\1.8.2\junit-platform-engine-1.8.2.jar;C:\Users\Toni\.m2\repository\org\opentest4j\opentest4j\1.2.0\opentest4j-1.2.0.jar;C:\Users\Toni\.m2\repository\org\junit\platform\junit-platform-commons\1.8.2\junit-platform-commons-1.8.2.jar;C:\Users\Toni\.m2\repository\org\junit\jupiter\junit-jupiter-api\5.8.2\junit-jupiter-api-5.8.2.jar;C:\Users\Toni\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;"/>
+    <property name="java.vm.vendor" value="Oracle Corporation"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="user.variant" value=""/>
+    <property name="java.vendor.url" value="https://java.oracle.com/"/>
+    <property name="user.timezone" value="Europe/Zagreb"/>
+    <property name="user.country.format" value="HR"/>
+    <property name="os.name" value="Windows 11"/>
+    <property name="java.vm.specification.version" value="17"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="user.country" value="US"/>
+    <property name="sun.boot.library.path" value="C:\Program Files\Java\jdk-17.0.2\bin"/>
+    <property name="sun.java.command" value="C:\Users\Toni\AppData\Local\Temp\surefire5272628862094194616\surefirebooter14059990797973883127.jar C:\Users\Toni\AppData\Local\Temp\surefire5272628862094194616 2022-04-01T17-39-34_812-jvmRun1 surefire16776820396508673986tmp surefire_010059641331551694387tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="surefire.test.class.path" value="C:\Users\Toni\NWTiS_1\tskobic\tskobic-zadaca_1\tskobic-zadaca_1_app\target\test-classes;C:\Users\Toni\NWTiS_1\tskobic\tskobic-zadaca_1\tskobic-zadaca_1_app\target\classes;C:\Users\Toni\.m2\repository\org\foi\nwtis\tskobic\tskobic-zadaca_1_lib\1.0.1\tskobic-zadaca_1_lib-1.0.1.jar;C:\Users\Toni\.m2\repository\com\google\code\gson\gson\2.9.0\gson-2.9.0.jar;C:\Users\Toni\.m2\repository\org\projectlombok\lombok\1.18.22\lombok-1.18.22.jar;C:\Users\Toni\.m2\repository\org\junit\jupiter\junit-jupiter-engine\5.8.2\junit-jupiter-engine-5.8.2.jar;C:\Users\Toni\.m2\repository\org\junit\platform\junit-platform-engine\1.8.2\junit-platform-engine-1.8.2.jar;C:\Users\Toni\.m2\repository\org\opentest4j\opentest4j\1.2.0\opentest4j-1.2.0.jar;C:\Users\Toni\.m2\repository\org\junit\platform\junit-platform-commons\1.8.2\junit-platform-commons-1.8.2.jar;C:\Users\Toni\.m2\repository\org\junit\jupiter\junit-jupiter-api\5.8.2\junit-jupiter-api-5.8.2.jar;C:\Users\Toni\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="C:\Users\Toni"/>
+    <property name="user.language" value="en"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.version.date" value="2022-01-18"/>
+    <property name="java.home" value="C:\Program Files\Java\jdk-17.0.2"/>
+    <property name="file.separator" value="\"/>
+    <property name="basedir" value="C:\Users\Toni\NWTiS_1\tskobic\tskobic-zadaca_1\tskobic-zadaca_1_app"/>
+    <property name="java.vm.compressedOopsMode" value="32-bit"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="surefire.real.class.path" value="C:\Users\Toni\AppData\Local\Temp\surefire5272628862094194616\surefirebooter14059990797973883127.jar"/>
+    <property name="user.script" value=""/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="17.0.2+8-86"/>
+    <property name="user.name" value="Toni"/>
+    <property name="path.separator" value=";"/>
+    <property name="os.version" value="10.0"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="Cp1250"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="localRepository" value="C:\Users\Toni\.m2\repository"/>
+    <property name="java.vendor.url.bug" value="https://bugreport.java.com/bugreport/"/>
+    <property name="java.io.tmpdir" value="C:\Users\Toni\AppData\Local\Temp\"/>
+    <property name="java.version" value="17.0.2"/>
+    <property name="user.dir" value="C:\Users\Toni\NWTiS_1\tskobic\tskobic-zadaca_1\tskobic-zadaca_1_app"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="user.language.format" value="hr"/>
+    <property name="sun.os.patch.level" value=""/>
+    <property name="native.encoding" value="Cp1250"/>
+    <property name="java.library.path" value="C:\Program Files\Java\jdk-17.0.2\bin;C:\Windows\Sun\Java\bin;C:\Windows\system32;C:\Windows;C:/Program Files/Java/jdk-17.0.2/bin/server;C:/Program Files/Java/jdk-17.0.2/bin;C:\Program Files (x86)\Intel\iCLS Client\;C:\Program Files\Intel\iCLS Client\;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\PuTTY\;C:\Program Files\dotnet\;C:\Program Files\nodejs\;C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\;C:\Program Files\Microsoft SQL Server\150\Tools\Binn\;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\Java\jdk-17.0.2\bin;C:\Program Files\Apache-Subversion-1.14.1\bin\;C:\Program Files\Git\cmd;C:\Users\Toni\AppData\Local\Microsoft\WindowsApps;C:\Users\Toni\AppData\Roaming\npm;C:\Users\Toni\.dotnet\tools;C:\Program Files\Java\jdk-17.0.2\bin;C:\msys64\mingw64\bin;C:\Users\Toni\AppData\Local\Programs\Microsoft VS Code\bin;C:\Program Files\apache-maven-3.8.5\bin;C:\Program Files\Apache-Subversion-1.14.1\bin\;C:\Users\Toni\Desktop;;."/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="java.vendor" value="Oracle Corporation"/>
+    <property name="java.vm.version" value="17.0.2+8-86"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="java.class.version" value="61.0"/>
+  </properties>
+  <testcase name="testUcitavanjePodataka" classname="org.foi.nwtis.tskobic.zadaca_1.ServerGlavniTest" time="0.063"/>
+  <testcase name="testPripremiKorisnici" classname="org.foi.nwtis.tskobic.zadaca_1.ServerGlavniTest" time="0.012"/>
+  <testcase name="testObradaZahtjeva" classname="org.foi.nwtis.tskobic.zadaca_1.ServerGlavniTest" time="0.173">
+    <failure type="org.opentest4j.AssertionFailedError"><![CDATA[org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+	at org.foi.nwtis.tskobic.zadaca_1.ServerGlavniTest.testObradaZahtjeva(ServerGlavniTest.java:113)
+]]></failure>
+    <system-out><![CDATA[Čekam korisnika.
+Čekam korisnika.
+METEO LZDA
+ERROR 40 Sintaksa komande nije uredu.
+]]></system-out>
+  </testcase>
+  <testcase name="testServerGlavni" classname="org.foi.nwtis.tskobic.zadaca_1.ServerGlavniTest" time="0.003"/>
+  <testcase name="testMain" classname="org.foi.nwtis.tskobic.zadaca_1.ServerGlavniTest" time="0.002"/>
+</testsuite>

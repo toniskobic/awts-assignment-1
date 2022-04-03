@@ -9,12 +9,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.Charset;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -31,26 +28,58 @@ import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.Konfiguracija;
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.KonfiguracijaApstraktna;
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.NeispravnaKonfiguracija;
 
+/**
+ * Glavna klasa poslužitelja ServerMeteo
+ */
 public class ServerMeteo {
+	
+	/** broj porta. */
 	int port;
+	
+	/** maksimalni broj čekača. */
 	int maksCekaca;
+	
+	/** veza. */
 	Socket veza = null;
+	
+	/** Kolekcija meteoroloških podataka za aerodrome. */
 	List<AerodromMeteo> aerodromiMeteo = new ArrayList<>();
 
+	/** Dozvoljeni izraz za meteo icao naredbu. */
 	String meteoIcao = "^METEO ([A-Z]{4})$";
+	
+	/** Dozvoljeni izraz za meteo icao datum naredbu. */
 	String meteoIcaoDatum = "^METEO ([A-Z]{4}) (\\d{4}-\\d{2}-\\d{2})$";
+	
+	/** Dozvoljeni izraz za meteo temp naredbu. */
 	String meteoTemp = "^TEMP (-?\\d{1,3},\\d{1}) (-?\\d{1,3},\\d{1})$";
+	
+	/** Dozvoljeni izraz za meteo temp datum naredbu. */
 	String meteoTempDatum = "^TEMP (-?\\d{1,3},\\d{1}) (-?\\d{1,3},\\d{1}) (\\d{4}-\\d{2}-\\d{2})$";
 
+	/** konfiguracijski podaci. */
 	static public Konfiguracija konfig = null;
+	
+	/** iso format za datum. */
 	static SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
+	/**
+	 * Konstruktor klase.
+	 *
+	 * @param port       broj porta
+	 * @param maksCekaca maksimalan broj čekača
+	 */
 	public ServerMeteo(int port, int maksCekaca) {
 		super();
 		this.port = port;
 		this.maksCekaca = maksCekaca;
 	}
 
+	/**
+	 * Učitavanje konfiguracijskih podataka.
+	 *
+	 * @param nazivDatoteke naziv datoteke konfiguracijskih podataka
+	 */
 	private static void ucitavanjePodataka(String nazivDatoteke) {
 		try {
 			konfig = KonfiguracijaApstraktna.preuzmiKonfiguraciju(nazivDatoteke);
@@ -59,6 +88,11 @@ public class ServerMeteo {
 		}
 	}
 
+	/**
+	 * Priprema (učitavanje) meteoroloških podataka za aerodrome.
+	 *
+	 * @param nazivDatotekeMeteoPodataka naziv datoteke meteo podataka
+	 */
 	private void pripremiMeteo(String nazivDatotekeMeteoPodataka) {
 		try {
 			BufferedReader br = new BufferedReader(
@@ -85,6 +119,9 @@ public class ServerMeteo {
 
 	}
 
+	/**
+	 * Obrada zahtjeva.
+	 */
 	public void obradaZahtjeva() {
 
 		try (ServerSocket ss = new ServerSocket(this.port, this.maksCekaca)) {
@@ -131,6 +168,13 @@ public class ServerMeteo {
 
 	}
 
+	/**
+	 * Provjera sintakse primljene naredbe.
+	 *
+	 * @param komanda komanda
+	 * @param regularniIzraz dozvoljeni izraz
+	 * @return true, ako je provjera uspješna
+	 */
 	private boolean provjeraSintakseObrada(String komanda, String regularniIzraz) {
 		Pattern izraz = Pattern.compile(regularniIzraz);
 		Matcher rezultatUsporedbe = izraz.matcher(komanda);
@@ -138,6 +182,12 @@ public class ServerMeteo {
 		return rezultatUsporedbe.matches();
 	}
 
+	/**
+	 * Izvršavanje naredbe meteo icao
+	 *
+	 * @param osw izlazni tok podataka
+	 * @param komanda komanda
+	 */
 	private void izvrsiMeteoIcao(OutputStreamWriter osw, String komanda) {
 		String p[] = komanda.split(" ");
 		String icao = p[1];
@@ -160,12 +210,25 @@ public class ServerMeteo {
 			}
 		}
 	}
-	
-	private double zaokruzi (double vrijednost, int decimala) {
-	    int d = (int) Math.pow(10, decimala);
-	    return (double) Math.round(vrijednost * d) / d;
+
+	/**
+	 * Metoda za zaokruživanje na unesenu preciznost, tj. decimalu
+	 *
+	 * @param vrijednost unesena vrijednost
+	 * @param decimala preciznost zaokruživanja
+	 * @return the double
+	 */
+	private double zaokruzi(double vrijednost, int decimala) {
+		int d = (int) Math.pow(10, decimala);
+		return (double) Math.round(vrijednost * d) / d;
 	}
 
+	/**
+	 * Izvršavanje naredbe meteo icao datum
+	 *
+	 * @param osw izlazni tok podataka
+	 * @param komanda komanda
+	 */
 	private void izvrsiMeteoIcaoDatum(OutputStreamWriter osw, String komanda) {
 		String p[] = komanda.split(" ");
 		String icao = p[1];
@@ -200,6 +263,12 @@ public class ServerMeteo {
 		}
 	}
 
+	/**
+	 * Izvršavanje naredbe meteo temp
+	 *
+	 * @param osw izlazni tok podataka
+	 * @param komanda komanda
+	 */
 	private void izvrsiMeteoTemp(OutputStreamWriter osw, String komanda) {
 		String p[] = komanda.split(" ");
 		String odgovor = "";
@@ -236,6 +305,12 @@ public class ServerMeteo {
 		}
 	}
 
+	/**
+	 * Izvršavanje naredbe meteo temp datum.
+	 *
+	 * @param osw izlazni tok podataka
+	 * @param komanda komanda
+	 */
 	private void izvrsiMeteoTempDatum(OutputStreamWriter osw, String komanda) {
 		String p[] = komanda.split(" ");
 		String datum = p[3] + " 00:00:00.00";
@@ -277,12 +352,25 @@ public class ServerMeteo {
 		}
 	}
 
+	/**
+	 * Izvršavanje pretvorbe iz double varijable sa zarezom u double varijablu sa točkom
+	 *
+	 * @param unos the unos
+	 * @return the double
+	 * @throws ParseException the parse exception
+	 */
 	private double izvrsiDoublePretvorbu(String unos) throws ParseException {
 		NumberFormat format = NumberFormat.getInstance(Locale.FRANCE);
 		double broj = format.parse(unos).doubleValue();
 		return broj;
 	}
 
+	/**
+	 * Ispisivanje greške.
+	 *
+	 * @param osw izlazni tok podataka
+	 * @param odgovor odgovor
+	 */
 	private void ispisGreske(OutputStreamWriter osw, String odgovor) {
 		try {
 			osw.write(odgovor);
@@ -293,6 +381,11 @@ public class ServerMeteo {
 		}
 	}
 
+	/**
+	 * Glavna metoda
+	 *
+	 * @param argumenti
+	 */
 	public static void main(String[] args) {
 		if (args.length != 1) {
 			System.out.println("Broj argumenata nije 1.");

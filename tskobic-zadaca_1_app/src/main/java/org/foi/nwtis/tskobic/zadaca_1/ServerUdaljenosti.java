@@ -1,7 +1,5 @@
 package org.foi.nwtis.tskobic.zadaca_1;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -9,41 +7,57 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.Charset;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
-import java.util.NoSuchElementException;
-import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.Konfiguracija;
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.KonfiguracijaApstraktna;
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.NeispravnaKonfiguracija;
 
+
+/**
+ * Glavna klasa poslužitelja ServerUdaljenosti
+ */
 public class ServerUdaljenosti {
+	
+	/** broj porta. */
 	int port;
+	
+	/** maksimalni broj čekača. */
 	int maksCekaca;
+	
+	/** maksimalno čekanje na spajanje klijenta. */
+	int maksCekanje;
+	
+	/** veza. */
 	Socket veza = null;
 
+	/** Konfiguracijski podaci. */
 	static public Konfiguracija konfig = null;
 
-	public ServerUdaljenosti(int port, int maksCekaca) {
+	/**
+	 * Konstruktor klase.
+	 *
+	 * @param port port porta
+	 * @param maksCekaca maksimalni broj čekača
+	 * @param maksCekanje maksimalno čekanje na spajanje klijenta
+	 */
+	public ServerUdaljenosti(int port, int maksCekaca, int maksCekanje) {
 		super();
 		this.port = port;
 		this.maksCekaca = maksCekaca;
+		this.maksCekanje = maksCekanje;
 	}
 
+	/**
+	 * Učitavanje konfiguracijskih podataka.
+	 *
+	 * @param nazivDatoteke naziv datoteke konfiguracijskih podataka
+	 */
 	private static void ucitavanjePodataka(String nazivDatoteke) {
 		try {
 			konfig = KonfiguracijaApstraktna.preuzmiKonfiguraciju(nazivDatoteke);
@@ -52,14 +66,18 @@ public class ServerUdaljenosti {
 		}
 	}
 
+	/**
+	 * Obrada zahtjeva.
+	 */
 	public void obradaZahtjeva() {
 
 		try (ServerSocket ss = new ServerSocket(this.port, this.maksCekaca)) {
+			ss.setSoTimeout(maksCekanje);
 			while (true) {
 				System.out.println("Čekam korisnika."); // TODO kasnije obrisati
 				this.veza = ss.accept();
 
-				DretvaUdaljenosti dretvaUdaljenosti = new DretvaUdaljenosti(this, konfig, veza);
+				DretvaUdaljenosti dretvaUdaljenosti = new DretvaUdaljenosti(konfig, veza);
 				dretvaUdaljenosti.start();
 			}
 
@@ -69,6 +87,11 @@ public class ServerUdaljenosti {
 
 	}
 
+	/**
+	 * Glavna metoda.
+	 *
+	 * @param args argumenti
+	 */
 	public static void main(String[] args) {
 		if (args.length != 1) {
 			System.out.println("Broj argumenata nije 1.");
@@ -83,34 +106,57 @@ public class ServerUdaljenosti {
 
 		int port = Integer.parseInt(konfig.dajPostavku("port"));
 		int maksCekaca = Integer.parseInt(konfig.dajPostavku("maks.cekaca"));
+		int maksCekanje = Integer.parseInt(konfig.dajPostavku("maks.cekanje"));
 
-		ServerUdaljenosti su = new ServerUdaljenosti(port, maksCekaca);
+		ServerUdaljenosti su = new ServerUdaljenosti(port, maksCekaca, maksCekanje);
 		su.obradaZahtjeva();
 	}
 
+	/**
+	 * Klasa dretva DretvaUdaljenosti
+	 */
 	private class DretvaUdaljenosti extends Thread {
-		ServerUdaljenosti serverUdaljenosti = null;
+		
+		/** konfiguracijski podaci. */
 		volatile Konfiguracija konfig = null;
+		
+		/** veza. */
 		Socket veza = null;
+		
+		/** lokalna kolekcija aerodroma. */
 		static volatile List<Aerodrom> aerodromi = new ArrayList<>();
 
+		/** dozvoljeni izraz za naredbu udaljenost icao. */
 		String udaljenostIcao = "^DISTANCE ([A-Z]{4}) ([A-Z]{4})$";
+		
+		/** dozvoljeni izraz za naredbu udaljenost ocisti. */
 		String udaljenostOcisti = "^DISTANCE CLEAR$";
 
+		/**
+		 * Konstruktor klase.
+		 *
+		 * @param konfig konfiguracijski podaci
+		 * @param veza veza
+		 */
 		// TODO pogledati za naziv dretve
-		public DretvaUdaljenosti(ServerUdaljenosti serverUdaljenosti, Konfiguracija konfig, Socket veza) {
+		public DretvaUdaljenosti(Konfiguracija konfig, Socket veza) {
 			super();
-			this.serverUdaljenosti = serverUdaljenosti;
 			this.konfig = konfig;
 			this.veza = veza;
 		}
 
+		/**
+		 * Metoda za pokretanje dretve
+		 */
 		@Override
 		public synchronized void start() {
 			// TODO Auto-generated method stub
 			super.start();
 		}
 
+		/**
+		 * Glavna metoda za rad dretve
+		 */
 		@Override
 		public void run() {
 			try (InputStreamReader isr = new InputStreamReader(this.veza.getInputStream(), Charset.forName("UTF-8"));
@@ -125,7 +171,6 @@ public class ServerUdaljenosti {
 					}
 					tekst.append((char) i);
 				}
-				System.out.println(tekst.toString()); // TODO kasnije obrisati
 				this.veza.shutdownInput();
 
 				if (provjeraSintakseObrada(tekst.toString(), udaljenostIcao)) {
@@ -142,6 +187,13 @@ public class ServerUdaljenosti {
 
 		}
 
+		/**
+		 * Provjera sintakse dozvoljenog izraza.
+		 *
+		 * @param komanda komanda
+		 * @param regularniIzraz dozvoljeni izraz
+		 * @return true, ako uspješno
+		 */
 		private boolean provjeraSintakseObrada(String komanda, String regularniIzraz) {
 			Pattern izraz = Pattern.compile(regularniIzraz);
 			Matcher rezultatUsporedbe = izraz.matcher(komanda);
@@ -149,6 +201,12 @@ public class ServerUdaljenosti {
 			return rezultatUsporedbe.matches();
 		}
 
+		/**
+		 * Izvršavanje naredbe udaljenost icao.
+		 *
+		 * @param osw izlazni tok podataka
+		 * @param komanda komanda
+		 */
 		private void izvrsiUdaljenostIcao(OutputStreamWriter osw, String komanda) {
 			String p[] = komanda.split(" ");
 			String icao1 = p[1];
@@ -180,8 +238,9 @@ public class ServerUdaljenosti {
 					}
 				}
 			}
-			double udaljenost = (double)udaljenost(Float.valueOf(aerodrom1.getGpsGS()), Float.valueOf(aerodrom1.getGpsGD()),
-					Float.valueOf(aerodrom2.getGpsGS()), Float.valueOf(aerodrom2.getGpsGD()));
+			double udaljenost = (double) udaljenost(Float.valueOf(aerodrom1.getGpsGS()),
+					Float.valueOf(aerodrom1.getGpsGD()), Float.valueOf(aerodrom2.getGpsGS()),
+					Float.valueOf(aerodrom2.getGpsGD()));
 
 			odgovor = "OK " + (int) Math.round(udaljenost);
 
@@ -195,6 +254,12 @@ public class ServerUdaljenosti {
 
 		}
 
+		/**
+		 * Izvršavanje naredbe brisanje spremnika.
+		 *
+		 * @param osw izlazni tok podataka
+		 * @param komanda komanda
+		 */
 		private void izvrsiBrisanjeSpremnika(OutputStreamWriter osw, String komanda) {
 			synchronized (aerodromi) {
 				aerodromi.clear();
@@ -210,6 +275,15 @@ public class ServerUdaljenosti {
 			}
 		}
 
+		/**
+		 * Metoda za izračunavanje udaljenosti dvije lokacije na Zemlji.
+		 *
+		 * @param gs1 geografska širina 1
+		 * @param gd1 geografska duljina 1
+		 * @param gs2 geografska širina 2
+		 * @param gd2 geografska duljina 2
+		 * @return the float
+		 */
 		private float udaljenost(float gs1, float gd1, float gs2, float gd2) {
 			double earthRadius = 6371000; // meters
 			double dLat = Math.toRadians(gs2 - gs1);
@@ -223,6 +297,12 @@ public class ServerUdaljenosti {
 			return dist;
 		}
 
+		/**
+		 * Dobavljanje areodroma
+		 *
+		 * @param icao icao aerodroma
+		 * @return the string
+		 */
 		private String dobaviAerodrom(String icao) {
 			String adresaAeroServer = "";
 			int portMeteoServer = 0;
@@ -237,6 +317,12 @@ public class ServerUdaljenosti {
 			return odgovorAeroServer;
 		}
 
+		/**
+		 * Izvršavanje pretvorbe dobavljenog aerodroma u tip klase Aerodrom
+		 *
+		 * @param odgovor odgovor poslužitelja ServerAerodroma
+		 * @return the aerodrom
+		 */
 		private Aerodrom izvrsiAerodromPretvorbu(String odgovor) {
 			String polje[] = new String[5];
 			Pattern uzorak = Pattern
@@ -257,6 +343,12 @@ public class ServerUdaljenosti {
 			return aerodrom;
 		}
 
+		/**
+		 * Ispisivanje greške.
+		 *
+		 * @param osw izlazni tok podataka
+		 * @param odgovor odgovor
+		 */
 		private void ispisGreske(OutputStreamWriter osw, String odgovor) {
 			try {
 				osw.write(odgovor);
@@ -267,12 +359,22 @@ public class ServerUdaljenosti {
 			}
 		}
 
+		/**
+		 * Metoda za prekidanje rada dretve.
+		 */
 		@Override
 		public void interrupt() {
-			// TODO Auto-generated method stub
 			super.interrupt();
 		}
 
+		/**
+		 * Slanje komande serveru
+		 *
+		 * @param adresa adresa servera
+		 * @param port broj porta
+		 * @param komanda komanda
+		 * @return the string
+		 */
 		public String posaljiKomandu(String adresa, int port, String komanda) {
 			try (Socket veza = new Socket(adresa, port);
 					InputStreamReader isr = new InputStreamReader(veza.getInputStream(), Charset.forName("UTF-8"));
@@ -301,6 +403,11 @@ public class ServerUdaljenosti {
 			return null;
 		}
 
+		/**
+		 * Ispis poruke na konzolu
+		 *
+		 * @param message poruka
+		 */
 		private void ispis(String message) {
 			System.out.println(message);
 
