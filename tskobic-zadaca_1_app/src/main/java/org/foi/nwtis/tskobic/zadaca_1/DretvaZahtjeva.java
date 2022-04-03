@@ -19,66 +19,65 @@ import java.util.regex.Pattern;
 
 import org.foi.nwtis.tskobic.vjezba_03.konfiguracije.Konfiguracija;
 
-
 /**
  * Klasa dretva DretvaZahtjeva.
  */
 public class DretvaZahtjeva extends Thread {
-	
+
 	/** broj aktivnih dretvi. */
 	private volatile static int brojAktivnihDretvi = 0;
-	
+
 	/** naziv dretve. */
 	String nazivDretve;
-	
+
 	/** međuspremnik. */
 	static ConcurrentHashMap<String, Medjuspremnik> chm = new ConcurrentHashMap<String, Medjuspremnik>();
-	
+
 	/** Objekt klase ServerGlavni. */
 	ServerGlavni serverGlavni = null;
-	
+
 	/** Konfiguracijski podaci. */
 	Konfiguracija konfig = null;
 
 	/** veza. */
 	Socket veza = null;
-	
+
 	/** Dozvoljeni izraz za aero naredbu. */
 	String aero = "^AIRPORT$";
-	
+
 	/** Dozvoljeni izraz za aero icao naredbu. */
 	String aeroIcao = "^AIRPORT ([A-Z]{4})$";
-	
+
 	/** Dozvoljeni izraz za icao udaljenost naredbu. */
 	String aeroIcaoUdaljenost = "^AIRPORT ([A-Z]{4}) (\\d{1,5})$";
-	
+
 	/** Dozvoljeni izraz za meteo icao naredbu. */
 	String meteoIcao = "^METEO ([A-Z]{4})$";
-	
+
 	/** Dozvoljeni izraz za meteo icao datum naredbu. */
 	String meteoIcaoDatum = "^METEO ([A-Z]{4}) (\\d{4}-\\d{2}-\\d{2})$";
-	
+
 	/** Dozvoljeni izraz za meteo temp naredbu. */
 	String meteoTemp = "^TEMP (-?\\d{1,3},\\d{1}) (-?\\d{1,3},\\d{1})$";
-	
+
 	/** Dozvoljeni izraz za meteo temp datum naredbu. */
 	String meteoTempDatum = "^TEMP (-?\\d{1,3},\\d{1}) (-?\\d{1,3},\\d{1}) (\\d{4}-\\d{2}-\\d{2})$";
-	
+
 	/** Dozvoljeni izraz za udaljenost naredbu. */
 	String udaljenostIcao = "^DISTANCE ([A-Z]{4}) ([A-Z]{4})$";
-	
+
 	/** Dozvoljeni izraz za udaljenost ocisti naredbu. */
 	String udaljenostOcisti = "^DISTANCE CLEAR$";
-	
+
 	/** Dozvoljeni izraz za međuspremnik ocisti naredbu. */
 	String medjuspremnikSpremi = "^CACHE BACKUP$";
-	
+
 	/** Dozvoljeni izraz za međuspremnik vrati naredbu. */
 	String medjuspremnikVrati = "^CACHE RESTORE$";
-	
+
 	/** Dozvoljeni izraz za međuspremnik očisti naredbu. */
 	String medjuspremnikOcisti = "^CACHE CLEAR$";
-	
+
 	/** Dozvoljeni izraz za međuspremnik statistika naredbu. */
 	String medjuspremnikStat = "^CACHE STAT$";
 
@@ -93,8 +92,8 @@ public class DretvaZahtjeva extends Thread {
 	 * Konstruktor klase
 	 *
 	 * @param serverGlavni objekt klase ServerGlavni
-	 * @param konfig konfiguracijski podaci
-	 * @param veza veza
+	 * @param konfig       konfiguracijski podaci
+	 * @param veza         veza
 	 */
 	public DretvaZahtjeva(ServerGlavni serverGlavni, Konfiguracija konfig, Socket veza) {
 		super("tskobic_" + (brojAktivnihDretvi + 1));
@@ -151,7 +150,7 @@ public class DretvaZahtjeva extends Thread {
 	/**
 	 * Obrada zahtjeva.
 	 *
-	 * @param osw izlazni tok podataka
+	 * @param osw     izlazni tok podataka
 	 * @param komanda omanda
 	 */
 	private void obradaZahtjeva(OutputStreamWriter osw, String komanda) {
@@ -217,7 +216,7 @@ public class DretvaZahtjeva extends Thread {
 	/**
 	 * Provjera sintakse dozvoljenog izraza.
 	 *
-	 * @param komanda komanda
+	 * @param komanda        komanda
 	 * @param regularniIzraz dozvoljeni izraz
 	 * @return true, if successful
 	 */
@@ -231,8 +230,8 @@ public class DretvaZahtjeva extends Thread {
 	/**
 	 * Izvršavanje međuspremnik naredbe.
 	 *
-	 * @param osw izlazni tok podataka
-	 * @param komanda komanda
+	 * @param osw       izlazni tok podataka
+	 * @param komanda   komanda
 	 * @param konfigDat the konfig dat
 	 */
 	@SuppressWarnings("unchecked")
@@ -251,22 +250,23 @@ public class DretvaZahtjeva extends Thread {
 			synchronized (konfig) {
 				datoteka = this.konfig.dajPostavku(konfigDat);
 			}
-			if (deserijalizacija(osw, datoteka) != null) {
-				chm = (ConcurrentHashMap<String, Medjuspremnik>) deserijalizacija(osw, datoteka);
+			Object podaci = deserijalizacija(osw, datoteka);
+			if (podaci != null) {
+				chm = (ConcurrentHashMap<String, Medjuspremnik>) podaci;
 			} else {
 				ispisPoruke(osw, "ERROR 49 Deserijalizacija podataka međuspremnika iz datoteke nije uspjela.");
 			}
 		} else if (provjeraSintakseObrada(komanda, medjuspremnikStat)) {
-			//TODO CACHE STAT
+			// TODO CACHE STAT
 		}
 	}
-	
+
 	/**
 	 * Serijalizacija međuspremnika u datoteku.
 	 *
-	 * @param osw izlazni tok podataka
+	 * @param osw      izlazni tok podataka
 	 * @param datoteka naziv datoteke
-	 * @param obj objekt koji se serijalizira
+	 * @param obj      objekt koji se serijalizira
 	 */
 	private void serijalizacija(OutputStreamWriter osw, String datoteka, Object obj) {
 		FileOutputStream out = null;
@@ -291,13 +291,13 @@ public class DretvaZahtjeva extends Thread {
 	/**
 	 * Deserijalizacija podataka iz datoteke u međuspremnik.
 	 *
-	 * @param osw izlazni tok podataka
+	 * @param osw      izlazni tok podataka
 	 * @param datoteka datoteka
 	 * @return the object
 	 */
 	private Object deserijalizacija(OutputStreamWriter osw, String datoteka) {
 		File f = new File(datoteka);
-		if(f.exists() && !f.isDirectory()) { 
+		if (f.exists() && !f.isDirectory()) {
 			try {
 				FileInputStream in = new FileInputStream(datoteka);
 				ObjectInputStream s = new ObjectInputStream(in);
@@ -318,11 +318,11 @@ public class DretvaZahtjeva extends Thread {
 	/**
 	 * Izvršavanje naredbe zaprimljene od klijenta.
 	 *
-	 * @param osw izlazni tok podataka
-	 * @param komanda komanda
+	 * @param osw          izlazni tok podataka
+	 * @param komanda      komanda
 	 * @param konfigAdresa adresa servera
-	 * @param konfigPort broj porta
-	 * @param server oznaka koja predstavlja server
+	 * @param konfigPort   broj porta
+	 * @param server       oznaka koja predstavlja server
 	 */
 	private void izvrsiNaredbu(OutputStreamWriter osw, String komanda, String konfigAdresa, String konfigPort,
 			char server) {
@@ -365,7 +365,7 @@ public class DretvaZahtjeva extends Thread {
 	/**
 	 * Ispis poruke klijentu.
 	 *
-	 * @param osw izlazni tok podataka
+	 * @param osw     izlazni tok podataka
 	 * @param odgovor odgovor
 	 */
 	private void ispisPoruke(OutputStreamWriter osw, String odgovor) {
@@ -389,8 +389,8 @@ public class DretvaZahtjeva extends Thread {
 	/**
 	 * Slanje komande serveru
 	 *
-	 * @param adresa adresa servera
-	 * @param port broj porta
+	 * @param adresa  adresa servera
+	 * @param port    broj porta
 	 * @param komanda komanda
 	 * @return the string
 	 */

@@ -10,29 +10,28 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-
 /**
  * Klasa za klijenta KorisnikGlavni.
  */
 public class KorisnikGlavni {
-	
+
 	/** broj porta. */
 	int port;
-	
+
 	/** maksimalno čekanje na odgovor poslužitelja. */
 	int cekanje;
-	
+
 	/** komanda. */
 	String komanda;
-	
+
 	/** adresa. */
 	String adresa;
 
 	/**
 	 * Slanje komande poslužitelju.
 	 *
-	 * @param adresa adresa
-	 * @param port broj porta
+	 * @param adresa  adresa
+	 * @param port    broj porta
 	 * @param cekanje maksimalno čekanje na odgovor poslužitelja
 	 * @param komanda komanda
 	 * @return the string
@@ -88,7 +87,7 @@ public class KorisnikGlavni {
 	 * Pretvaranje aero komandi u format koji odgovara poslužitelju.
 	 *
 	 * @param komanda komanda
-	 * @param args argumenti
+	 * @param args    argumenti
 	 * @return the string
 	 */
 	private String pretvoriAeroKomandu(String komanda, String[] args) {
@@ -116,7 +115,7 @@ public class KorisnikGlavni {
 	 * Pretvaranje meteo komandi u format koji odgovara poslužitelju.
 	 *
 	 * @param komanda komanda
-	 * @param args argumenti
+	 * @param args    argumenti
 	 * @return the string
 	 */
 	private String pretvoriMeteoKomandu(String komanda, String[] args) {
@@ -126,7 +125,13 @@ public class KorisnikGlavni {
 			break;
 		}
 		case 14: {
-			komanda = komanda + " METEO " + args[11] + args[13];
+			String datum = args[13];
+			try {
+				datum = pretvoriDatum(datum);
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			komanda = komanda + " METEO " + args[11] + " " + datum;
 			break;
 		}
 		default: {
@@ -141,7 +146,7 @@ public class KorisnikGlavni {
 	 * Pretvaranje temp komandi u format koji odgovara poslužitelju.
 	 *
 	 * @param komanda komanda
-	 * @param args argumenti
+	 * @param args    argumenti
 	 * @return the string
 	 */
 	private String pretvoriTempKomandu(String komanda, String[] args) {
@@ -157,7 +162,7 @@ public class KorisnikGlavni {
 			} catch (ParseException e) {
 				e.printStackTrace();
 			}
-			komanda = komanda + " TEMP " + args[11] + " " + args[13] + datum;
+			komanda = komanda + " TEMP " + args[11] + " " + args[13] + " " + datum;
 			break;
 		}
 		default: {
@@ -186,7 +191,7 @@ public class KorisnikGlavni {
 	 * Pretvaranje udaljenost komandi i format koji odgovara poslužitelju.
 	 *
 	 * @param komanda komanda
-	 * @param args argumenti
+	 * @param args    argumenti
 	 * @return the string
 	 */
 	private String pretvoriUdaljenostKomandu(String komanda, String[] args) {
@@ -207,15 +212,15 @@ public class KorisnikGlavni {
 		}
 		return komanda;
 	}
-	
+
 	/**
 	 * Provjera predmetnog dijela unesenih argumenata.
 	 *
 	 * @param komanda komanda
-	 * @param args argumenti
+	 * @param args    argumenti
 	 * @return the string
 	 */
-	public String provjeraPredmeta (String komanda, String[] args) {
+	public String provjeraPredmeta(String komanda, String[] args) {
 		if (args[10].equals("--aerodrom")) {
 			komanda = pretvoriAeroKomandu(komanda, args);
 		} else if (args[10].equals("--meteo")) {
@@ -273,15 +278,16 @@ public class KorisnikGlavni {
 			}
 
 			kg.komanda = kg.provjeraPredmeta(kg.komanda, args);
-			
+
 			if (kg.komanda == null) {
 				System.out.println("Neispravan unos argumenata.");
 				return;
 			}
-
+			String odgovor = kg.posaljiKomandu(kg.adresa, kg.port, kg.cekanje, kg.komanda);
+			kg.ispis(odgovor);
+		} else {
+			System.out.println("Neispravan unos argumenata.");
+			return;
 		}
-
-		String odgovor = kg.posaljiKomandu(kg.adresa, kg.port, kg.cekanje, kg.komanda);
-		kg.ispis(odgovor);
 	}
 }

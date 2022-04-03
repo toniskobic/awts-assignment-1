@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.Charset;
@@ -33,7 +34,7 @@ class ServerGlavniTest {
 
 	@BeforeEach
 	void setUp() throws Exception {
-		serverGlavni = new ServerGlavni(8003, 10, 1000);
+		serverGlavni = new ServerGlavni(8003, 10, 1800000);
 	}
 
 	@AfterEach
@@ -77,7 +78,8 @@ class ServerGlavniTest {
 
 		String adresa = "localhost";
 		int port = 8003;
-		String komanda = "METEO LZDA";
+		int cekanje = 1800000;
+		String komanda = "USER pkos PASSWORD 123456 AIRPORT";
 		String odgovor = null;
 
 		try {
@@ -86,10 +88,14 @@ class ServerGlavniTest {
 			e1.printStackTrace();
 		}
 
-		try (Socket veza = new Socket(adresa, port);
-				InputStreamReader isr = new InputStreamReader(veza.getInputStream(), Charset.forName("UTF-8"));
-				OutputStreamWriter osw = new OutputStreamWriter(veza.getOutputStream(), Charset.forName("UTF-8"));) {
-
+		InputStreamReader isr = null;
+		OutputStreamWriter osw = null;
+		
+		try (Socket veza = new Socket()) {
+			InetSocketAddress isa = new InetSocketAddress(adresa, port);
+			veza.connect(isa, cekanje);
+			isr = new InputStreamReader(veza.getInputStream(), Charset.forName("UTF-8"));
+			osw = new OutputStreamWriter(veza.getOutputStream(), Charset.forName("UTF-8"));
 			osw.write(komanda);
 			osw.flush();
 			veza.shutdownOutput();
@@ -123,6 +129,7 @@ class ServerGlavniTest {
 		@Override
 		public void run() {
 			serverGlavni.ucitavanjePodataka("NWTiS_tskobic_4.txt");
+			serverGlavni.pripremiKorisnici("korisnici.csv");
 			serverGlavni.obradaZahtjeva();
 		}
 

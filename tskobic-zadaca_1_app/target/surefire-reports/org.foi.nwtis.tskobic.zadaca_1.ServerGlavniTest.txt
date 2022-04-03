@@ -1,8 +1,0 @@
--------------------------------------------------------------------------------
-Test set: org.foi.nwtis.tskobic.zadaca_1.ServerGlavniTest
--------------------------------------------------------------------------------
-Tests run: 5, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.329 s <<< FAILURE! - in org.foi.nwtis.tskobic.zadaca_1.ServerGlavniTest
-org.foi.nwtis.tskobic.zadaca_1.ServerGlavniTest.testObradaZahtjeva  Time elapsed: 0.173 s  <<< FAILURE!
-org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
-	at org.foi.nwtis.tskobic.zadaca_1.ServerGlavniTest.testObradaZahtjeva(ServerGlavniTest.java:113)
-
